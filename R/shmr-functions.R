@@ -272,6 +272,8 @@ get_pair_frequency <- function(mutations, npositions, max_dist, min_dist = 0, mu
 #'     starting from A are given by the first row of the matrix).
 #' @param ber_params A vector giving substitution rates, nucleotide
 #'     order is AGCT.
+#' @param germline_sequence A string with the location of a fasta file describing the germline sequence.
+#' @param python_driver A string with the location of the python driver.
 #'
 #' @export
 shm_sim <- function(write_summary_stats = TRUE,
@@ -281,7 +283,7 @@ shm_sim <- function(write_summary_stats = TRUE,
                     aid_context_model = "data/logistic_fw_3mer.csv",
                     context_model_length = 3,
                     context_model_pos_mutating = 2,
-                    germline_sequence = "/Users/juliefukuyama/GitHub/HyperMutationModels/data/gpt.fasta",
+                    germline_sequence = system.file("extdata", "gpt.fasta", package = "shmr"),
                     ber_lambda = .5,
                     bubble_size = 20,
                     exo_left = 20,
@@ -290,9 +292,10 @@ shm_sim <- function(write_summary_stats = TRUE,
                     n_seqs = 500,
                     ber_params = c(.25, .25, .25, .25),
                     pol_eta_params = diag(rep(1,4)),
-                    p_fw = .5) {
+                    p_fw = .5,
+                    python_driver = system.file("src", "simulate_mutations.py", package = "shmr")) {
     #nucleotides = c('A', 'G', 'C', 'T')
-    call = paste(c('~/GitHub/SHMModels/analysis/simulate_mutations.py',
+    call = paste(c(python_driver,
                    '--write-summary-stats',
                    ifelse(write_summary_stats, 'True', 'False'),
                    '--write-seqs',
