@@ -9,7 +9,9 @@
 #' @return Filtered version
 #' @export
 pca_filter <- function(abc_output, sum_stats, nf, tol) {
-    out.pca = dudi.pca(rbind(sum_stats, abc_output$stats),
+    df = rbind(sum_stats, abc_output$stats)
+    rownames(df) = 1:nrow(df)
+    out.pca = dudi.pca(df,
                        row.w = c(0, rep(1, nrow(abc_output$stats))),
                        scannf = FALSE, nf = nf)
     observed_projection= as.matrix(out.pca$li)[1,]
