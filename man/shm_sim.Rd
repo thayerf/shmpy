@@ -6,8 +6,8 @@
 \usage{
 shm_sim(write_summary_stats = TRUE, summary_stat_output = "output",
   write_seqs = FALSE, sequence_output = "output.fasta",
-  aid_context_model = "data/logistic_model_c_fwd_5mer.csv",
-  context_model_length = 5, context_model_pos_mutating = 2,
+  aid_context_model = "data/logistic_fw_3mer.csv", context_model_length = 3,
+  context_model_pos_mutating = 2,
   germline_sequence = "/Users/juliefukuyama/GitHub/HyperMutationModels/data/gpt.fasta",
   ber_lambda = 0.5, bubble_size = 20, exo_left = 20, exo_right = 20,
   n_mutation_rounds = 3, n_seqs = 500, ber_params = c(0.25, 0.25, 0.25,

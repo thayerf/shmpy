@@ -511,6 +511,3 @@ test_likelihood_optim <- function(n, pltrue, prtrue, b) {
     o = optim(c(.5, .5), fn)
     return(1 / (1 + exp(-o$par)))
 }
-out = test_likelihood_asymmetric(1000, .05, .1, 10)
-ggplot(out) + geom_tile(aes(x = pl, y = pr, fill = exp(loglik))) + scale_fill_viridis()
-out[which.max(out$loglik),]
