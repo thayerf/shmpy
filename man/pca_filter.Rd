@@ -4,7 +4,7 @@
 \alias{pca_filter}
 \title{PCA filtering of simulations}
 \usage{
-pca_filter(abc_output, sum_stats, nf, tol)
+pca_filter(abc_output, sum_stats, nf, tol, cols = 1:length(sum_stats))
 }
 \arguments{
 \item{abc_output}{The output from ABC_rejection.}
@@ -14,6 +14,8 @@ pca_filter(abc_output, sum_stats, nf, tol)
 \item{nf}{The number of principal components to use for distance computations.}
 
 \item{tol}{The fraction of simulations to keep.}
+
+\item{cols}{The columns of summary statistics on which to perform PCA. The other columns are left unchanged.}
 }
 \value{
 Filtered version

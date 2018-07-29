@@ -4,18 +4,25 @@
 #' @param sum_stats The observed summary statistic vector.
 #' @param nf The number of principal components to use for distance computations.
 #' @param tol The fraction of simulations to keep.
+#' @param cols The columns of summary statistics on which to perform PCA. The other columns are left unchanged.
 #'
 #' @importFrom ade4 dudi.pca
 #' @return Filtered version
 #' @export
-pca_filter <- function(abc_output, sum_stats, nf, tol) {
+pca_filter <- function(abc_output, sum_stats, nf, tol, cols = 1:length(sum_stats), scale = NULL) {
     df = rbind(sum_stats, abc_output$stats)
     rownames(df) = 1:nrow(df)
-    out.pca = dudi.pca(df,
+    out.pca = dudi.pca(df[,cols],
                        row.w = c(0, rep(1, nrow(abc_output$stats))),
                        scannf = FALSE, nf = nf)
-    observed_projection= as.matrix(out.pca$li)[1,]
+    observed_projection = as.matrix(out.pca$li)[1,]
     simulation_projections = as.matrix(out.pca$li)[-1,]
+    if(length(cols) < length(sum_stats)) {
+        non_projected = which(!(1:length(sum_stats) %in% cols))
+        observed_projection = c(observed_projection, scale * sum_stats[non_projected])
+        simulation_projections = cbind(simulation_projections,
+                                       sweep(abc_output$stats[,non_projected, drop = FALSE], 2, STATS = scale, FUN = "*"))
+    }
     dist_from_observed = apply(sweep(simulation_projections, 2, STATS = observed_projection, FUN = "-"), 1, function(x) sqrt(sum(x^2)))
     to_keep = order(dist_from_observed)[1:(length(dist_from_observed) * tol)]
     abc_filtered = abc_output
@@ -516,3 +523,4 @@ test_likelihood_optim <- function(n, pltrue, prtrue, b) {
     o = optim(c(.5, .5), fn)
     return(1 / (1 + exp(-o$par)))
 }
+
