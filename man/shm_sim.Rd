@@ -6,13 +6,14 @@
 \usage{
 shm_sim(write_summary_stats = TRUE, summary_stat_output = "output",
   write_seqs = FALSE, sequence_output = "output.fasta",
-  aid_context_model = "data/logistic_fw_3mer.csv", context_model_length = 3,
-  context_model_pos_mutating = 2, germline_sequence = system.file("extdata",
-  "gpt.fasta", package = "shmr"), ber_lambda = 0.5, bubble_size = 20,
-  exo_left = 20, exo_right = 20, n_mutation_rounds = 3, n_seqs = 500,
-  ber_params = c(0.25, 0.25, 0.25, 0.25), pol_eta_params = diag(rep(1, 4)),
-  p_fw = 0.5, python_driver = system.file("src", "simulate_mutations.py",
-  package = "shmr"))
+  aid_context_model = "data/logistic_fw_3mer.csv",
+  context_model_length = 3, context_model_pos_mutating = 2,
+  germline_sequence = system.file("extdata", "gpt.fasta", package =
+  "shmr"), ber_lambda = 0.5, bubble_size = 20, exo_left = 20,
+  exo_right = 20, n_mutation_rounds = 3, n_seqs = 500,
+  ber_params = c(0.25, 0.25, 0.25, 0.25), pol_eta_params = diag(rep(1,
+  4)), p_fw = 0.5, python_driver = system.file("src",
+  "simulate_mutations.py", package = "shmr"))
 }
 \arguments{
 \item{germline_sequence}{A string with the location of a fasta file describing the germline sequence.}

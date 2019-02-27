@@ -144,6 +144,22 @@ get_mutation_indices <- function(seq1, seq2, as_indicator = TRUE) {
     }
 }
 
+#' Finds the number of mutations.
+#'
+#' @param mutated_seq String giving the mutated sequence.
+#' @param germline_seq String giving the germline sequence germline
+#' sequence.
+#' @return The number of mutations.
+#' @export
+get_num_mutations <- function(mutated_seq, germline_seq) {
+    if(length(mutated_seq) != length(germline_seq))
+        stop(sprintf("The input sequences need to be the same length, yours are %i and %i", length(mutated_seq), length(germline_seq)))
+    mvec = strsplit(mutated_seq, "", fixed = TRUE)[[1]]
+    glvec = strsplit(germline_seq, "", fixed = TRUE)[[1]]
+    return(sum(mvec != glvec))
+}
+
+
 #' Finds per-position mutation frequences for a set of sequences
 #'
 #' @param germline_seq Germline sequence as a character vector.
@@ -163,6 +179,47 @@ get_mutation_freqs <- function(germline_seq, mutated_seqs) {
                       mutation_counts = mutation_counts,
                       mutation_rates = mutation_counts / length(mutated_seqs),
                       germline_base = as.vector(germline_seq)))
+}
+
+#' Make a predictor matrix from a set of sequences
+#'
+#' Presumably to be used as input to a neural net
+#'
+#' @param seqs A vector, length equal to the number of sequences, each
+#' element a string giving the sequence.
+#'
+#' @return A matrix, number of rows equal to length(seqs), each column
+#' a predictor.
+#' @export
+make_predictors_from_seqs <- function(seqs) {
+    expand_sequence = function(seq) {
+        s_vec = strsplit(seq, split = "", fixed = TRUE)[[1]]
+        match_list = lapply(s_vec, function(s) s == c("A", "T", "G", "C"))
+        expanded_representation = as.numeric(Reduce(c, match_list))
+    }
+    seq_matrix = t(sapply(seqs, expand_sequence))
+    return(seq_matrix)
+}
+
+#' Creates summary statistics
+#'
+#' Given a set of sequences, a function that takes a set of sequences
+#' and returns a predictor matrix, and a net, computes the net's
+#' predictions and returns the average of the predictions over the
+#' entire set of sequences.
+#'
+#' @param seqs A character vector, length equal to the number of sequences.
+#' @param predictor_creation_fn A function that takes a sequence
+#' vector and returns a predictor matrix.
+#' @param net A trained net.
+#'
+#' @return A vector of summary statistics, length equal to the number
+#' of summary statistics (the number of parameters the net estimates).
+#' @export
+get_net_summary_stats <- function(seqs, predictor_creation_fn, net) {
+    predictors = predictor_creation_fn(seqs)
+    predictions = predict(net, predictors)
+    return(colMeans(predictions))
 }
 
 #' Computes spatial colocalization statistic

@@ -4,7 +4,8 @@
 \alias{pca_filter}
 \title{PCA filtering of simulations}
 \usage{
-pca_filter(abc_output, sum_stats, nf, tol, cols = 1:length(sum_stats))
+pca_filter(abc_output, sum_stats, nf, tol, cols = 1:length(sum_stats),
+  scale = NULL)
 }
 \arguments{
 \item{abc_output}{The output from ABC_rejection.}
