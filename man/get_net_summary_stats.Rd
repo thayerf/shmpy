@@ -4,7 +4,8 @@
 \alias{get_net_summary_stats}
 \title{Creates summary statistics}
 \usage{
-get_net_summary_stats(seqs, predictor_creation_fn, net)
+get_net_summary_stats(seqs, predictor_creation_fn, net,
+  extra_preds = NULL)
 }
 \arguments{
 \item{seqs}{A character vector, length equal to the number of sequences.}
@@ -13,6 +14,8 @@ get_net_summary_stats(seqs, predictor_creation_fn, net)
 vector and returns a predictor matrix.}
 
 \item{net}{A trained net.}
+
+\item{extra_preds}{Any non-sequence predictors to use.}
 }
 \value{
 A vector of summary statistics, length equal to the number
