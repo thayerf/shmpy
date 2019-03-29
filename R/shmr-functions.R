@@ -201,6 +201,25 @@ make_predictors_from_seqs <- function(seqs) {
     return(seq_matrix)
 }
 
+#' Make a predictor matrix from a sequence
+#'
+#' Presumably to be used as input to a neural net
+#'
+#' @param seq A string, length equal to the number of sequences, each
+#' element a string giving the sequence.
+#'
+#' @return A matrix, number of rows equal to length(seqs), each column
+#' a predictor.
+#' @export
+sequence_matrix_representation <- function(seq) {
+    s_vec = strsplit(seq, split = "", fixed = TRUE)[[1]]
+    match_list = lapply(s_vec, function(s) s == c("A", "T", "G", "C"))
+    seq_matrix = Reduce(rbind, match_list)
+    rownames(seq_matrix) = s_vec
+    colnames(seq_matrix) = c("A", "T", "G", "C")
+    return(seq_matrix + 0)
+}
+
 #' Creates summary statistics
 #'
 #' Given a set of sequences, a function that takes a set of sequences
@@ -212,12 +231,16 @@ make_predictors_from_seqs <- function(seqs) {
 #' @param predictor_creation_fn A function that takes a sequence
 #' vector and returns a predictor matrix.
 #' @param net A trained net.
+#' @param extra_preds Any non-sequence predictors to use.
 #'
 #' @return A vector of summary statistics, length equal to the number
 #' of summary statistics (the number of parameters the net estimates).
 #' @export
-get_net_summary_stats <- function(seqs, predictor_creation_fn, net) {
+get_net_summary_stats <- function(seqs, predictor_creation_fn, net, extra_preds = NULL) {
     predictors = predictor_creation_fn(seqs)
+    if(!is.null(extra_preds)) {
+        predictors = cbind(predictors, extra_preds)
+    }
     predictions = predict(net, predictors)
     return(colMeans(predictions))
 }
