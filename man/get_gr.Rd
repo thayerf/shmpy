@@ -2,7 +2,7 @@
 % Please edit documentation in R/shmr-functions.R
 \name{get_gr}
 \alias{get_gr}
-\title{Something something}
+\title{Computes g(r) function}
 \usage{
 get_gr(germline_seq, mutated_seqs, r_max, r_min, mutation_probs = NULL)
 }
@@ -29,5 +29,5 @@ A data frame with columns dist (the distance between
     corresponding distance between mutations.)
 }
 \description{
-Something something
+Computes g(r) function
 }
