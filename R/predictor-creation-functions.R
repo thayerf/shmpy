@@ -7,14 +7,17 @@
 #' the ith position in the sequence is the jth element of the vector
 #' (A, T, G, C)
 #' @export
-sequence_to_matrix <- function(seq) {
+sequence_to_matrix <- function(seq, nuc = c("A", "T", "G", "C")) {
+    seq_matrix= matrix(0, nrow = nchar(seq), ncol = 4)
     s_vec = strsplit(seq, split = "", fixed = TRUE)[[1]]
-    match_list = lapply(s_vec, function(s) s == c("A", "T", "G", "C"))
-    seq_matrix = Reduce(rbind, match_list)
+    for(i in 1:length(s_vec)) {
+        seq_matrix[i,which(nuc == s_vec[i])] = 1
+    }
     rownames(seq_matrix) = s_vec
     colnames(seq_matrix) = c("A", "T", "G", "C")
-    return(seq_matrix + 0)
+    return(seq_matrix)
 }
+
 
 #' Creates an array of one-hot matrix representations of a set of
 #' sequences.
