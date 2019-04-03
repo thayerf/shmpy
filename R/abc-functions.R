@@ -51,3 +51,36 @@ check_abc_on_sims <- function(params, statistics, match_tol) {
     comparisons = Reduce(rbind, comparisons)
     return(comparisons)
 }
+
+#' Creates summary statistics
+#'
+#' Given a set of sequences, a function that takes a set of sequences
+#' and returns a predictor matrix, and a net, computes the net's
+#' predictions and returns the average of the predictions over the
+#' entire set of sequences.
+#'
+#' @param seqs A character vector, length equal to the number of sequences.
+#' @param predictor_creation_fn A function that takes a sequence
+#' vector and returns a predictor matrix.
+#' @param net A trained net.
+#' @param groups A factor describing how the sequences should be
+#' aggregated. If groups of sequences were drawn from the same
+#' parameters, the summary statistics are averaged over each group.
+#' @param extra_preds Any non-sequence predictors to use.
+#'
+#' @return A matrix of summary statistics, number of rows equal to the
+#' number of groups, number of columns equal to the number of summary
+#' statistics (the number of parameters the net estimates).
+#' @export
+get_net_summary_stats <- function(seqs, predictor_creation_fn, net, groups, extra_preds = NULL) {
+    predictors = predictor_creation_fn(seqs)
+    if(!is.null(extra_preds)) {
+        predictors = cbind(predictors, extra_preds)
+    }
+    predictions = predict(net, predictors)
+    split_predictions = lapply(unique(groups), function(g) predictions[which(groups == g),])
+    avg_predictions = lapply(split_predictions, colMeans)
+    summary_stats = Reduce(rbind, avg_predictions)
+    rownames(summary_stats) = NULL
+    return(summary_stats)
+}
