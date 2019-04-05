@@ -4,7 +4,7 @@
 \alias{sequence_to_matrix}
 \title{Creates a matrix representation of a sequence}
 \usage{
-sequence_to_matrix(seq)
+sequence_to_matrix(seq, nuc = c("A", "T", "G", "C"))
 }
 \arguments{
 \item{seq}{A string with the sequence.}
