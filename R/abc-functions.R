@@ -73,14 +73,17 @@ check_abc_on_sims <- function(params, statistics, match_tol) {
 #' statistics (the number of parameters the net estimates).
 #' @export
 get_net_summary_stats <- function(seqs, predictor_creation_fn, net, groups, extra_preds = NULL) {
-    predictors = predictor_creation_fn(seqs)
-    if(!is.null(extra_preds)) {
-        predictors = cbind(predictors, extra_preds)
+    summary_stat_list = list()
+    for(g in unique(groups)) {
+        idx = which(groups == g)
+        predictors = predictor_creation_fn(seqs[idx])
+        if(!is.null(extra_preds)) {
+            predictors = cbind(predictors, extra_preds[idx,])
+        }
+        predictions = predict(net, predictors)
+        summary_stat_list[[as.character(g)]] = colMeans(predictions)
     }
-    predictions = predict(net, predictors)
-    split_predictions = lapply(unique(groups), function(g) predictions[which(groups == g),])
-    avg_predictions = lapply(split_predictions, colMeans)
-    summary_stats = Reduce(rbind, avg_predictions)
+    summary_stats = Reduce(rbind, summary_stat_list)
     rownames(summary_stats) = NULL
     return(summary_stats)
 }
