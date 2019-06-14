@@ -13,6 +13,7 @@ colnames(params) = c("ber_lambda",
             "ber_params[3]",
             "p_fw")
 seqs = read.csv("for_nnet_sequences.csv", header = FALSE, stringsAsFactors = FALSE)[,1]
+train_indices = 1:(.9 * length(seqs))
 ## transformation for interval responses
 logit = function(x) log(x / (1 - x))
 ## create the response variables
@@ -25,18 +26,55 @@ y = scale(y)
 predictors_dense = one_hot_1d_sequences(seqs)
 model_dense = keras_model_sequential()
 model_dense %>%
-    layer_dense(units = 512, activation = 'relu', input_shape = ncol(predictors_dense)) %>%
+#    layer_dense(units = 512, activation = 'relu', input_shape = ncol(predictors_dense)) %>%
+#    layer_dropout(rate = .2) %>%
+    layer_dense(units = 200, activation = 'relu') %>%
     layer_dropout(rate = .2) %>%
-    layer_dense(units = 256, activation = 'relu') %>%
-    layer_dropout(rate = .2) %>%
-    layer_dense(units = 128, activation = 'relu') %>%
+    layer_dense(units = 100, activation = 'relu') %>%
     layer_dropout(rate = .2) %>%
     layer_dense(units = ncol(y))
 model_dense %>% compile(
   loss = 'mse',
-  optimizer = optimizer_rmsprop(),
+  optimizer = optimizer_adam(lr = .001),
   metrics = c('accuracy')
 )
+weights = fit_and_save_weights(model_dense, epochs = 25,
+    x = predictors_dense[train_indices,], y = y[train_indices,],
+    batch_size = 128, validation_split = .2)
+## compare to the same model fit with a large step size
+model_dense_large_step = keras_model_sequential()
+model_dense_large_step %>%
+#    layer_dense(units = 512, activation = 'relu', input_shape = ncol(predictors_dense)) %>%
+#    layer_dropout(rate = .2) %>%
+    layer_dense(units = 200, activation = 'relu') %>%
+    layer_dropout(rate = .2) %>%
+    layer_dense(units = 100, activation = 'relu') %>%
+    layer_dropout(rate = .2) %>%
+    layer_dense(units = ncol(y))
+model_dense_large_step %>% compile(
+  loss = 'mse',
+  optimizer = optimizer_adam(lr=.003),
+  metrics = c('accuracy')
+)
+weights_large_step = fit_and_save_weights(model_dense_large_step, epochs = 25,
+    x = predictors_dense[train_indices,], y = y[train_indices,],
+    batch_size = 128, validation_split = .2)
+
+large_step_compare = avg_weight_prediction_comparison(model_dense_large_step, weights_large_step,
+    x = predictors_dense[-train_indices,], burnin = 10)
+## MSE for final weights
+mean((large_step_compare[[1]] - y[-train_indices,])^2)
+## MSE for average weights
+mean((large_step_compare[[2]] - y[-train_indices,])^2)
+
+compare = avg_weight_prediction_comparison(model_dense, weights,
+    x = predictors_dense[-train_indices,], burnin = 10)
+## MSE for final weights
+mean((compare[[1]] - y[-train_indices,])^2)
+## MSE for average weights
+mean((compare[[2]] - y[-train_indices,])^2)
+
+
 model_dense %>% fit(
   predictors_dense, y, 
   epochs = 50, batch_size = 128, 
@@ -54,9 +92,9 @@ model_conv_1 %>%
     layer_conv_2d(filters = latent_dim, kernel_size = c(7, 4), input_shape = input_shape) %>%
     layer_flatten() %>%
     layer_dropout(rate=.2) %>%
-    layer_dense(units = 1500, activation = 'relu') %>%
-    layer_dropout(rate=.2) %>%
-    layer_dense(units = 200, activation = 'relu') %>%
+#    layer_dense(units = 1500, activation = 'relu') %>%
+#    layer_dropout(rate=.2) %>%
+    layer_dense(units = 20, activation = 'relu') %>%
     layer_dropout(rate=.2) %>%
     layer_dense(units = ncol(y))
 model_conv_1 %>% compile(loss = 'mse', optimizer = optimizer_rmsprop())
