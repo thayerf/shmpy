@@ -10,7 +10,7 @@ from SHMModels.fitted_models import ContextModel
 from SHMModels.simulate_mutations import memory_simulator
 import time
 from scipy.special import logit
-import genDat
+from genDat import *
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, TimeDistributed, SimpleRNN, Input, Dropout, Conv2D, ConvLSTM2D, Conv3D, BatchNormalization, Flatten, Conv1D, MaxPooling2D, Reshape
 from keras import optimizers
