@@ -16,7 +16,7 @@ def hot_encode_2d(seq):
       return(seq_hot)
       
       
-def gen_batch_2d(batch_size):
+def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds):
       params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size)
       seqs = seqs[:,0]
       seqs = [i.decode('utf-8') for i in seqs]
@@ -36,16 +36,7 @@ def gen_batch_2d(batch_size):
       params[:,4:8]= logit(params[:,4:8])
       params = (params - means)/sds
       return({"seqs":seqs_hot, "params":params})
-# Create iterator for simulation
-def genTraining_2d(batch_size):
-    while True:
-        # Get training data for step
-        dat = gen_batch_2d(batch_size)
-        # We repeat the labels for each x in the sequence
-        batch_labels = dat['params']
-        batch_data = dat['seqs']
-        yield batch_data,batch_labels
-  
+	  
 def gen_batch_1d(batch_size):
       params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size)
       seqs = seqs[:,0]
