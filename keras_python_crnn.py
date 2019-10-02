@@ -59,6 +59,17 @@ aid_model = ContextModel(context_model_length,
                              context_model_pos_mutating,
                              aid_model_string)
 orig_seq  = hot_encode_2d(str(sequence.seq))
+
+# Create iterator for simulation
+def genTraining_2d(batch_size):
+    while True:
+        # Get training data for step
+        dat = gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds)
+        # We repeat the labels for each x in the sequence
+        batch_labels = dat['params']
+        batch_data = dat['seqs']
+        yield batch_data,batch_labels
+
 # Create testing data
 junk = gen_batch_2d(500)
 t_batch_data = junk['seqs']
