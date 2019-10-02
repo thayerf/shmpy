@@ -58,21 +58,20 @@ aid_model_string = pkgutil.get_data("SHMModels", aid_context_model)
 aid_model = ContextModel(context_model_length,
                              context_model_pos_mutating,
                              aid_model_string)
-
+orig_seq  = hot_encode_2d(str(sequence.seq))
 # Create testing data
 junk = gen_batch_2d(500)
 t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
-#Create Network
+# Create Network
 model = Sequential()
-model.add(TimeDistributed(Conv2D(32,kernel_size = (10,4), strides = (2,1)), input_shape = (None,308,4,1)))
-model.add(TimeDistributed(Reshape((150,32,1))))
+model.add(TimeDistributed(Conv2D(64,kernel_size = (8,9), strides = (1,1)), input_shape = (None,308,9,1)))
+model.add(TimeDistributed(Reshape((301,64,1))))
 model.add(TimeDistributed(MaxPooling2D()))
-model.add(TimeDistributed(Conv2D(16, kernel_size = (8,4), strides = (4,4))))
+model.add(TimeDistributed(Conv2D(32, kernel_size = (8,4), strides = (1,1))))
 model.add(TimeDistributed(MaxPooling2D()))
-model.add(TimeDistributed(Conv2D(8, kernel_size = (8,4), strides = (4,4))))
 model.add(TimeDistributed(Flatten()))
-model.add(TimeDistributed(Dense(4, activation = 'relu')))
+model.add(TimeDistributed(Dense(16, activation = 'relu')))
 model.add(SimpleRNN(9, activation = 'linear'))
 
 
