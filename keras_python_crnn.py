@@ -35,9 +35,9 @@ n_mutation_rounds = 3
 # step size and step decay
 step_size = .00001
 # batch size num epochs
-batch_size = 10
-num_epochs = 150
-steps_per_epoch = 100
+batch_size = 1000
+num_epochs = 200
+steps_per_epoch = 1
 
 
 
@@ -64,14 +64,14 @@ orig_seq  = hot_encode_2d(str(sequence.seq))
 def genTraining_2d(batch_size):
     while True:
         # Get training data for step
-        dat = gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds)
+        dat = gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds, orig_seq, means, sds)
         # We repeat the labels for each x in the sequence
         batch_labels = dat['params']
         batch_data = dat['seqs']
         yield batch_data,batch_labels
 
 # Create testing data
-junk = gen_batch_2d(500)
+junk = gen_batch_2d(500,sequence,aid_model,n_seqs, n_mutation_rounds, orig_seq, means, sds)
 t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
 # Create Network
@@ -94,4 +94,11 @@ model.compile(loss='mean_squared_error',
 # Train the model on this epoch
 history = model.fit_generator(genTraining_2d(batch_size),epochs=num_epochs,
                               steps_per_epoch=steps_per_epoch,
-                              validation_data = (t_batch_data,t_batch_labels))
+                              validation_data = (t_batch_data,t_batch_labels), verbose = 2)
+
+# Save predictions and labels
+np.savetxt("sims/crnn/labels", t_batch_labels, delimiter=",")
+np.savetxt("sims/crnn/preds", model.predict(t_batch_data))
+# Save  model loss
+np.savetxt("sims/crnn/loss", history.history['val_loss'])
+model.save("sims/crnn/shmr_crnn_model")

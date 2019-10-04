@@ -16,7 +16,7 @@ def hot_encode_2d(seq):
       return(seq_hot)
       
       
-def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds):
+def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds):
       params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size)
       seqs = seqs[:,0]
       seqs = [i.decode('utf-8') for i in seqs]
