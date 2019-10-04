@@ -17,7 +17,7 @@ from keras import optimizers
 from sklearn.preprocessing import scale
 import warnings
 import matplotlib.pyplot as plt
-
+from keras.models import load_model
 warnings.filterwarnings(action='ignore')
 
 ##### USER INPUTS
@@ -75,7 +75,7 @@ junk = gen_batch_2d(500,sequence,aid_model,n_seqs, n_mutation_rounds, orig_seq, 
 t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
 # load model
-model = load_model("/sims/crnn/shmr_crnn_model")
+model = load_model("sims/crnn/shmr_crnn_model")
 
 
 # Print model summary
