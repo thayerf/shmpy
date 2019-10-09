@@ -10,13 +10,14 @@ from SHMModels.fitted_models import ContextModel
 from SHMModels.simulate_mutations import memory_simulator
 import time
 from scipy.special import logit
-import genDat
+from genDat import *
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, TimeDistributed, SimpleRNN, Input, Dropout
 from keras import optimizers
 from sklearn.preprocessing import scale
 import warnings
 import matplotlib.pyplot as plt
+import build_nns
 
 warnings.filterwarnings(action='ignore')
 
@@ -30,18 +31,18 @@ context_model_pos_mutating = 2
 # Path to aid model
 aid_context_model = "data/aid_logistic_3mer.csv"
 # Num seqs and n_mutation rounds
-n_seqs = 10
+n_seqs = 50
 n_mutation_rounds = 3
 # Nodes per layer
 nodes = 32
 # Number of hidden layers
 num_hidden= 5
 # step size and step decay
-step_size = .00001
+step_size = .001
 # batch size num epochs
-batch_size = 1
-num_epochs = 150
-steps_per_epoch = 500
+batch_size = 1000
+num_epochs = 400
+steps_per_epoch = 1
 
 
 
@@ -63,23 +64,24 @@ aid_model = ContextModel(context_model_length,
                              context_model_pos_mutating,
                              aid_model_string)
 
-
+orig_seq = hot_encode_1d(sequence)
 # Create testing data
-junk = gen_batch_2d(1000)
+junk = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1)
 t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
+
+# Create iterator for simulation
+def genTraining_1d(batch_size):
+    while True:
+        # Get training data for step
+        dat = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1)
+        # We repeat the labels for each x in the sequence
+        batch_labels = dat['params']
+        batch_data = dat['seqs']
+        yield batch_data,batch_labels
 # Create Network
     # Build Model
-model = Sequential()
-
-# Add Layers
-model.add(Dense(512, activation = 'relu' , input_dim=len(t_batch_data[1])))
-model.add(Dropout(.2))
-model.add(Dense(256, activation = 'relu' ))
-model.add(Dropout(.2))
-model.add(Dense(128, activation = 'relu'))
-model.add(Dropout(.2))
-model.add(Dense(9, activation = 'linear'))
+model = build_ffrnn(4)
 
       
 # Print model summary
