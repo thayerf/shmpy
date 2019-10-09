@@ -102,3 +102,10 @@ ax1.set_ylabel('MSE')
 ax1.set_xlabel('Epoch')
 line, = ax1.plot(history.history['val_loss'], lw=2)
 plt.savefig('hist.pdf')
+
+# Save predictions and labels
+np.savetxt("sims/ffrnn/labels", t_batch_labels, delimiter=",")
+np.savetxt("sims/ffrnn/preds", model.predict(t_batch_data))
+# Save  model loss
+np.savetxt("sims/ffrnn/loss", history.history['val_loss'])
+model.save("sims/ffrnn/shmr_ffrnn_model")
