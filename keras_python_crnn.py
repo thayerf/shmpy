@@ -12,7 +12,7 @@ import time
 from scipy.special import logit
 from genDat import *
 from keras.models import Sequential
-from keras.layers import LSTM, Dense, TimeDistributed, SimpleRNN, Input, Dropout, Conv2D, ConvLSTM2D, Conv3D, BatchNormalization, Flatten, Conv1D, MaxPooling2D, Reshape
+from keras.layers import LSTM, Dense, TimeDistributed, SimpleRNN, Input, Dropout, Conv2D, ConvLSTM2D, Conv3D, BatchNormalization, Flatten, Conv1D, MaxPooling2D, Reshape, Activation
 from keras import optimizers
 from sklearn.preprocessing import scale
 import warnings
@@ -76,12 +76,8 @@ t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
 # Create Network
 model = Sequential()
-model.add(TimeDistributed(Conv2D(64,kernel_size = (8,9), strides = (1,1)), input_shape = (None,308,9,1)))
-model.add(TimeDistributed(Reshape((301,64,1))))
-model.add(TimeDistributed(MaxPooling2D()))
-model.add(TimeDistributed(Conv2D(32, kernel_size = (8,4), strides = (1,1))))
-model.add(TimeDistributed(MaxPooling2D()))
-model.add(TimeDistributed(Flatten()))
+model.add(TimeDistributed(Dense(64,activation ="relu" ), input_shape = (None,308,9,1)))
+model.add(TimeDistributed(Dense(32,activation = "relu" )))
 model.add(TimeDistributed(Dense(16, activation = 'relu')))
 model.add(SimpleRNN(9, activation = 'linear'))
 

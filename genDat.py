@@ -71,6 +71,8 @@ def gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_s
       if(encoding == 2):
             np.zeros((len(seqs)//n_seqs,n_seqs,len(seqs[1])))
             ##### ENCODE INDICATOR HERE
+      params[:,4:8]= logit(params[:,4:8])
+      params = (params - means)/sds
       return({"seqs":seqs_hot, "params":params})
       
 

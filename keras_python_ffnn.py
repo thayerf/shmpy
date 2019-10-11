@@ -17,7 +17,7 @@ from keras import optimizers
 from sklearn.preprocessing import scale
 import warnings
 import matplotlib.pyplot as plt
-import build_nns
+from build_nns import *
 
 warnings.filterwarnings(action='ignore')
 
@@ -38,7 +38,7 @@ nodes = 32
 # Number of hidden layers
 num_hidden= 5
 # step size and step decay
-step_size = .001
+step_size = .01
 # batch size num epochs
 batch_size = 1000
 num_epochs = 400
