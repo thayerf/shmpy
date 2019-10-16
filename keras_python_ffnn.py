@@ -66,7 +66,7 @@ aid_model = ContextModel(context_model_length,
 
 orig_seq = hot_encode_1d(sequence)
 # Create testing data
-junk = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1)
+junk = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1,0)
 t_batch_data = junk['seqs']
 t_batch_labels = junk['params']
 
@@ -74,7 +74,7 @@ t_batch_labels = junk['params']
 def genTraining_1d(batch_size):
     while True:
         # Get training data for step
-        dat = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1)
+        dat = gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, 1,0)
         # We repeat the labels for each x in the sequence
         batch_labels = dat['params']
         batch_data = dat['seqs']
@@ -104,8 +104,8 @@ line, = ax1.plot(history.history['val_loss'], lw=2)
 plt.savefig('hist.pdf')
 
 # Save predictions and labels
-np.savetxt("sims/ffrnn/labels", t_batch_labels, delimiter=",")
-np.savetxt("sims/ffrnn/preds", model.predict(t_batch_data))
+np.savetxt("sims/ffrnn/no_ber/labels", t_batch_labels, delimiter=",")
+np.savetxt("sims/ffrnn/no_ber/preds", model.predict(t_batch_data))
 # Save  model loss
-np.savetxt("sims/ffrnn/loss", history.history['val_loss'])
-model.save("sims/ffrnn/shmr_ffrnn_model")
+np.savetxt("sims/ffrnn/no_ber/loss", history.history['val_loss'])
+model.save("sims/ffrnn/no_ber/shmr_ffrnn_model")

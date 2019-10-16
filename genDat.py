@@ -24,8 +24,8 @@ def hot_encode_1d(seq):
                   seq_hot[4*j+3]= (seq[j] == 'C')
       return(seq_hot)
       
-def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds, orig_seq, means, sds,encoding):
-      params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size)
+def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds, orig_seq, means, sds,encoding,ber_pathway):
+      params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size,ber_pathway)
       seqs = seqs[:,0]
       seqs = [i.decode('utf-8') for i in seqs]
       seqs = [list(i) for i in seqs]
@@ -47,12 +47,13 @@ def gen_batch_2d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds, orig_
       # 2 is 1 dim (just indicator of mutation at that position)
       if(encoding == 2):
            raise Exception('Cannot 2d hot encode 1 dimensional encoding')
-      params[:,4:8]= logit(params[:,4:8])
+      if(ber_pathway):	
+           params[:,4:8]= logit(params[:,4:8])
       params = (params - means)/sds
       return({"seqs":seqs_hot, "params":params})
 	  
-def gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, encoding):
-      params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size)
+def gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_seq, means, sds, encoding,ber_pathway):
+      params, seqs = memory_simulator(sequence, aid_model, n_seqs,n_mutation_rounds, n_sims = batch_size,ber_pathway)
       seqs = seqs[:,0]
       seqs = [i.decode('utf-8') for i in seqs]
       seqs = [list(i) for i in seqs]
@@ -71,7 +72,8 @@ def gen_batch_1d(batch_size, sequence,aid_model,n_seqs, n_mutation_rounds,orig_s
       if(encoding == 2):
             np.zeros((len(seqs)//n_seqs,n_seqs,len(seqs[1])))
             ##### ENCODE INDICATOR HERE
-      params[:,4:8]= logit(params[:,4:8])
+      if(ber_pathwawy):
+            params[:,4:8]= logit(params[:,4:8])
       params = (params - means)/sds
       return({"seqs":seqs_hot, "params":params})
       
