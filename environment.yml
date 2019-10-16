@@ -1,0 +1,19 @@
+name: shmpy
+channels:
+  - anaconda
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - make
+  - numpy
+  - pandas
+  - pip
+  - pybind11 >=2.3.0
+  - scipy
+  - pip:
+      - black
+      - click
+      - tensorflow
+      - keras
+      - biopython
