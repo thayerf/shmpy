@@ -14,4 +14,4 @@ dependencies:
       - keras
       - biopython
       - scikit-learn
-      - https://github.com/thayerf/SHMModels.git
+      - ./SHMModels

@@ -129,24 +129,4 @@ print(model.summary(90))
 adam = optimizers.adam(lr=step_size)
 model.compile(loss="mean_squared_error", optimizer=adam)
 # Train the model on this epoch
-history = model.fit_generator(
-    genTraining_1d(batch_size),
-    epochs=num_epochs,
-    steps_per_epoch=steps_per_epoch,
-    validation_data=(t_batch_data, t_batch_labels),
-)
 
-
-fig = plt.figure()
-ax1 = fig.add_subplot(111)
-ax1.set_ylabel("MSE")
-ax1.set_xlabel("Epoch")
-line, = ax1.plot(history.history["val_loss"], lw=2)
-plt.savefig("hist.pdf")
-
-# Save predictions and labels
-np.savetxt("sims/ffrnn/no_ber/labels", t_batch_labels, delimiter=",")
-np.savetxt("sims/ffrnn/no_ber/preds", model.predict(t_batch_data))
-# Save  model loss
-np.savetxt("sims/ffrnn/no_ber/loss", history.history["val_loss"])
-model.save("sims/ffrnn/no_ber/shmr_ffrnn_model")

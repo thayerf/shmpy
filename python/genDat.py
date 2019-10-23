@@ -105,7 +105,7 @@ def gen_batch_1d(
     if encoding == 2:
         np.zeros((len(seqs) // n_seqs, n_seqs, len(seqs[1])))
         ##### ENCODE INDICATOR HERE
-    if ber_pathwawy:
+    if ber_pathway:
         params[:, 4:8] = logit(params[:, 4:8])
     params = (params - means) / sds
     return {"seqs": seqs_hot, "params": params}
