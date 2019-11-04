@@ -42,6 +42,8 @@ step_size = 0.01
 batch_size = 1000
 num_epochs = 400
 steps_per_epoch = 1
+# flag to include ber_pathway
+ber_pathway = 1
 
 
 # Means and sds from set of 5000 prior samples (logit transform 4:8)
@@ -92,16 +94,16 @@ junk = gen_batch_1d(
     means,
     sds,
     1,
-    1,
+    ber_pathway,
 )
 t_batch_data = junk["seqs"]
 t_batch_labels = junk["params"]
 
 # Create iterator for simulation
-def genTraining_1d(batch_size):
+def genTraining(batch_size):
     while True:
         # Get training data for step
-        dat = gen_batch_1d(
+        dat = gen_batch(
             batch_size,
             sequence,
             aid_model,
@@ -117,11 +119,6 @@ def genTraining_1d(batch_size):
         batch_labels = dat["params"]
         batch_data = dat["seqs"]
         yield batch_data, batch_labels
-
-
-# Create Network
-# Build Model
-model = build_ffrnn(4)
 
 
 # Print model summary

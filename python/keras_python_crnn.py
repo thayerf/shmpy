@@ -33,11 +33,11 @@ from keras import optimizers
 from sklearn.preprocessing import scale
 import warnings
 import matplotlib.pyplot as plt
+import click
 
 warnings.filterwarnings(action="ignore")
 
-##### USER INPUTS
-
+### USER INPUTS (Non-click are fixed)
 # Path to germline sequence
 germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating
@@ -119,6 +119,8 @@ junk = gen_batch_2d(
 )
 t_batch_data = junk["seqs"]
 t_batch_labels = junk["params"]
+
+
 # Create Network
 model = Sequential()
 model.add(TimeDistributed(Dense(64, activation="relu"), input_shape=(None, 308, 9, 1)))
