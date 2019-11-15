@@ -187,3 +187,9 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+
+# Nextflow 
+.nextflow*
+*.log
+output/*
+params/*
