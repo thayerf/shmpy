@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/opt/conda/envs/shmpy/bin/python
 import subprocess
 import sys
 import numpy as np
@@ -41,15 +41,15 @@ from pathlib import Path
 ##### USER INPUTS (Edit some of these to be CLI eventually)
 
 # Path to germline sequence
-from python.build_nns import build_nn
-from python.genDat import hot_encode_2d, gen_batch_1d, gen_batch
+from build_nns import build_nn
+from genDat import hot_encode_2d, gen_batch_1d, gen_batch
 
-germline_sequence = "data/gpt.fasta"
+#germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating
 context_model_length = 3
 context_model_pos_mutating = 2
 # Path to aid model
-aid_context_model = "data/aid_logistic_3mer.csv"
+#aid_context_model = "data/aid_logistic_3mer.csv"
 # Num seqs and n_mutation rounds
 n_seqs = 50
 n_mutation_rounds = 3
@@ -87,6 +87,7 @@ sds = [
     1.43775417,
     0.28748498,
 ]
+
 def run_cmds(cmds, shell=False):
     for cmd in cmds:
         subprocess.check_call(cmd, shell=shell)
@@ -97,13 +98,11 @@ def dry_run_cmds(cmds, outfiles):
     for cmd in cmds:
         click.echo(cmd)
 
-
 def dry_check_run_cmds(cmds, ctx, outfiles=[], shell=False):
     if ctx.obj["DRY"]:
         dry_run_cmds(cmds, outfiles)
     else:
         run_cmds(cmds, shell=shell)
-
 
 @click.group()
 @click.option(
@@ -153,12 +152,14 @@ def command2(ctx, option1, option2, option3):
 
 # For right now, the only CLI arguments are the type of network and the dimension of the encoding.
 @cli.command()
+@click.argument("germline_sequence")
+@click.argument("aid_context_model")
 @click.argument("network_type")
 @click.argument("encoding_type", type=int)
 @click.argument("encoding_length", type=int)
 @click.argument("output_path")
 @click.pass_context
-def train(ctx, network_type, encoding_type, encoding_length, output_path):
+def train(ctx, germline_sequence, aid_context_model, network_type, encoding_type, encoding_length, output_path):
     """
     Train the network(s).
     """
@@ -232,11 +233,11 @@ def train(ctx, network_type, encoding_type, encoding_length, output_path):
             validation_data=(t_batch_data, t_batch_labels),
         )
         # Save predictions and labels
-        np.savetxt(outfiles["labels"]), t_batch_labels, delimiter=",")
-        np.savetxt(outfiles["preds"]), model.predict(t_batch_data))
+        np.savetxt(outfiles["labels"], t_batch_labels, delimiter=",")
+        np.savetxt(outfiles["preds"], model.predict(t_batch_data))
         # Save  model loss
-        np.savetxt(outfiles["loss"]), history.history["val_loss"])
-        model.save(outfiles["model"]))
+        np.savetxt(outfiles["loss"], history.history["val_loss"])
+        model.save(outfiles["model"])
 
 
 if __name__ == "__main__":
