@@ -138,7 +138,7 @@ fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax1.set_ylabel("MSE")
 ax1.set_xlabel("Epoch")
-line, = ax1.plot(history.history["val_loss"], lw=2)
+(line,) = ax1.plot(history.history["val_loss"], lw=2)
 plt.savefig("hist.pdf")
 
 # Save predictions and labels

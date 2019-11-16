@@ -12,25 +12,23 @@ from keras.layers import (
 )
 
 
-def build_nn(type, encoding_dim, output_dim):
+def build_nn(type, output_dim):
     model = Sequential()
     if type == "crnn":
-        model = build_crnn(encoding_dim, output_dim)
+        model = build_crnn(output_dim)
     elif type == "ffrnn":
-        model = build_ffrnn(encoding_dim, output_dim)
+        model = build_ffrnn(output_dim)
     else:
         raise RuntimeError("Network type must be either 'crnn' or 'ffrnn'")
     return model
 
 
-def build_crnn(encoding_length, output_length):
+def build_crnn(output_length):
     model = Sequential()
     model.add(
         TimeDistributed(
-            Conv2D(
-                64, kernel_size=(10, encoding_length), strides=(1, 1), activation="relu"
-            ),
-            input_shape=(None, 308, encoding_length, 1),
+            Conv2D(64, kernel_size=(10, 4), strides=(1, 1), activation="relu"),
+            input_shape=(None, 308, 4, 1),
         )
     )
     model.add(TimeDistributed(Reshape((299, 64, 1))))
