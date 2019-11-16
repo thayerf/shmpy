@@ -55,7 +55,7 @@ num_hidden = 5
 # step size and step decay
 step_size = 0.0001
 # batch size num epochs
-batch_size = 1000
+batch_size = 10
 num_epochs = 400
 steps_per_epoch = 1
 # flag to include ber_pathway
@@ -103,53 +103,53 @@ def main(network_type, encoding_type, encoding_length, output_path):
         context_model_length, context_model_pos_mutating, aid_model_string
     )
     orig_seq = hot_encode_2d(sequence)
-    # model = build_nn(network_type, 9)
-    # adam = optimizers.adam(lr=step_size)
-    # print(model.summary(90))
-    # Create testing data
+    model = build_nn(network_type, 9)
+    adam = optimizers.adam(lr=step_size)
+    print(model.summary(90))
+    #Create testing data
     junk = gen_batch(
-        3, sequence, aid_model, 3, 500, orig_seq, means, sds, 2, 4, ber_pathway,
+        batch_size, sequence, aid_model, n_seqs, n_mutation_rounds, orig_seq, means, sds, 2, 4, ber_pathway,
     )
     t_batch_data = junk["seqs"]
     t_batch_labels = junk["params"]
 
-    # # Create iterator for simulation
-    # def genTraining(batch_size):
-    #     while True:
-    #         # Get training data for step
-    #         dat = gen_batch(
-    #             batch_size,
-    #             sequence,
-    #             aid_model,
-    #             n_seqs,
-    #             n_mutation_rounds,
-    #             orig_seq,
-    #             means,
-    #             sds,
-    #             encoding_type,
-    #             encoding_length,
-    #             ber_pathway,
-    #         )
-    #         # We repeat the labels for each x in the sequence
-    #         batch_labels = dat["params"]
-    #         batch_data = dat["seqs"]
-    #         yield batch_data, batch_labels
-    #
-    # # We use MSE for now
-    # model.compile(loss="mean_squared_error", optimizer=adam)
-    # # Train the model on this epoch
-    # history = model.fit_generator(
-    #     genTraining(batch_size),
-    #     epochs=num_epochs,
-    #     steps_per_epoch=steps_per_epoch,
-    #     validation_data=(t_batch_data, t_batch_labels),
-    # )
-    # # Save predictions and labels
-    # np.savetxt(Path(output_path, "labels"), t_batch_labels, delimiter=",")
-    # np.savetxt(Path(output_path, "preds"), model.predict(t_batch_data))
-    # # Save  model loss
-    # np.savetxt(Path(output_path, "loss"), history.history["val_loss"])
-    # model.save(Path(output_path, "model"))
+    # Create iterator for simulation
+    def genTraining(batch_size):
+        while True:
+            # Get training data for step
+            dat = gen_batch(
+                batch_size,
+                sequence,
+                aid_model,
+                n_seqs,
+                n_mutation_rounds,
+                orig_seq,
+                means,
+                sds,
+                encoding_type,
+                encoding_length,
+                ber_pathway,
+            )
+            # We repeat the labels for each x in the sequence
+            batch_labels = dat["params"]
+            batch_data = dat["seqs"]
+            yield batch_data, batch_labels
+
+    # We use MSE for now
+    model.compile(loss="mean_squared_error", optimizer=adam)
+    # Train the model on this epoch
+    history = model.fit_generator(
+        genTraining(batch_size),
+        epochs=num_epochs,
+        steps_per_epoch=steps_per_epoch,
+        validation_data=(t_batch_data, t_batch_labels),
+    )
+    # Save predictions and labels
+    np.savetxt(Path(output_path, "labels"), t_batch_labels, delimiter=",")
+    np.savetxt(Path(output_path, "preds"), model.predict(t_batch_data))
+    # Save  model loss
+    np.savetxt(Path(output_path, "loss"), history.history["val_loss"])
+    model.save(Path(output_path, "model"))
 
 
 if __name__ == "__main__":
