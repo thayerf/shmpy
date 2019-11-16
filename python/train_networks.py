@@ -38,8 +38,8 @@ from pathlib import Path
 ##### USER INPUTS (Edit some of these to be CLI eventually)
 
 # Path to germline sequence
-from python.build_nns import build_nn
-from python.genDat import hot_encode_2d, gen_batch_1d, gen_batch
+from build_nns import build_nn
+from genDat import hot_encode_2d, gen_batch_1d, gen_batch
 
 germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating
@@ -55,7 +55,7 @@ num_hidden = 5
 # step size and step decay
 step_size = 0.0001
 # batch size num epochs
-batch_size = 1000
+batch_size = 10
 num_epochs = 400
 steps_per_epoch = 1
 # flag to include ber_pathway
@@ -103,22 +103,12 @@ def main(network_type, encoding_type, encoding_length, output_path):
         context_model_length, context_model_pos_mutating, aid_model_string
     )
     orig_seq = hot_encode_2d(sequence)
-    model = build_nn(network_type, encoding_type, 9)
+    model = build_nn(network_type, 9)
     adam = optimizers.adam(lr=step_size)
     print(model.summary(90))
-    # Create testing data
+    #Create testing data
     junk = gen_batch(
-        batch_size,
-        sequence,
-        aid_model,
-        n_seqs,
-        n_mutation_rounds,
-        orig_seq,
-        means,
-        sds,
-        encoding_type,
-        encoding_length,
-        ber_pathway,
+        batch_size, sequence, aid_model, n_seqs, n_mutation_rounds, orig_seq, means, sds, 2, 4, ber_pathway,
     )
     t_batch_data = junk["seqs"]
     t_batch_labels = junk["params"]

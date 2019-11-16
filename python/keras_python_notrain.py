@@ -129,4 +129,3 @@ print(model.summary(90))
 adam = optimizers.adam(lr=step_size)
 model.compile(loss="mean_squared_error", optimizer=adam)
 # Train the model on this epoch
-

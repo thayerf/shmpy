@@ -43,7 +43,7 @@ def gen_batch(
     encoding_length,
     ber_pathway,
 ):
-    params, seqs = memory_simulator(
+    params, seqs, mech = memory_simulator(
         sequence, aid_model, n_seqs, n_mutation_rounds, batch_size, ber_pathway
     )
     seqs = seqs[:, 0]
@@ -76,7 +76,11 @@ def gen_batch(
     if ber_pathway:
         params[:, 4:8] = logit(params[:, 4:8])
 
-    return {"seqs": seqs_hot, "params": params}
+    return {
+        "seqs": seqs_hot,
+        "params": params,
+        "mechs": mech.reshape((batch_size, n_seqs, 3, len(orig_seq))),
+    }
 
 
 def gen_batch_1d(
