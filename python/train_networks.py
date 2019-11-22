@@ -1,45 +1,18 @@
-import numpy as np
-import numpy.random
 import pkgutil
-from Bio.Seq import Seq
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
-from SHMModels.summary_statistics import write_all_stats
-from SHMModels.fitted_models import ContextModel
-from SHMModels.simulate_mutations import memory_simulator
-import time
-from scipy.special import logit
-from genDat import *
-from keras.models import Sequential
-from keras.layers import (
-    LSTM,
-    Dense,
-    TimeDistributed,
-    SimpleRNN,
-    Input,
-    Dropout,
-    Conv2D,
-    ConvLSTM2D,
-    Conv3D,
-    BatchNormalization,
-    Flatten,
-    Conv1D,
-    MaxPooling2D,
-    Reshape,
-    Activation,
-)
-from keras import optimizers
-from sklearn.preprocessing import scale
-import warnings
-import click
 from pathlib import Path
 
-##### USER INPUTS (Edit some of these to be CLI eventually)
+import click
+from Bio import SeqIO
+from Bio.Alphabet import IUPAC
+from SHMModels.fitted_models import ContextModel
+from keras import optimizers
 
 # Path to germline sequence
 from build_nns import build_nn
-from genDat import hot_encode_2d, gen_batch_1d, gen_batch
+from genDat import *
+from genDat import hot_encode_2d, gen_batch
+
+##### USER INPUTS (Edit some of these to be CLI eventually)
 
 germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating
@@ -103,7 +76,7 @@ def main(network_type, encoding_type, encoding_length, output_path):
         context_model_length, context_model_pos_mutating, aid_model_string
     )
     orig_seq = hot_encode_2d(sequence)
-    model = build_nn(network_type, 9)
+    model = build_nn(network_type, 4)
     adam = optimizers.adam(lr=step_size)
     print(model.summary(90))
     #Create testing data
@@ -111,7 +84,7 @@ def main(network_type, encoding_type, encoding_length, output_path):
         batch_size, sequence, aid_model, n_seqs, n_mutation_rounds, orig_seq, means, sds, 2, 4, ber_pathway,
     )
     t_batch_data = junk["seqs"]
-    t_batch_labels = junk["params"]
+    t_batch_labels = junk["mech"]
 
     # Create iterator for simulation
     def genTraining(batch_size):
@@ -131,7 +104,7 @@ def main(network_type, encoding_type, encoding_length, output_path):
                 ber_pathway,
             )
             # We repeat the labels for each x in the sequence
-            batch_labels = dat["params"]
+            batch_labels = dat["mech"]
             batch_data = dat["seqs"]
             yield batch_data, batch_labels
 
