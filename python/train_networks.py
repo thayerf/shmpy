@@ -86,7 +86,7 @@ sds = [
 ]
 
 
-# For right now, the only CLI arguments are the type of network and the dimension of the encoding.
+# For right now, the only CLI arguments are the type of network, the output directory, and the dimension of the encoding.
 @click.command()
 @click.argument("network_type")
 @click.argument("encoding_type", type=int)
