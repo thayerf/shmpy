@@ -18,6 +18,7 @@ from keras.layers import (
     SimpleRNN,
     Dropout,
     Conv2D,
+    Conv2DTranspose,
     Flatten,
     Conv1D,
     MaxPooling2D,
@@ -107,14 +108,22 @@ x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
 encoded = MaxPooling2D((2, 2), padding="same")(x)
 
 # Now we decode back up
-x = Conv2D(8, (3, 3), activation="relu", padding="same")(encoded)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(16, (3, 4), activation="relu")(x)
-x = UpSampling2D((2, 3))(x)
-decoded = Conv2D(1, (3, 3), activation="relu", padding="same")(x)
-decoded = Reshape((308, 3))(decoded)
+x = Dense(units=7 * 7 * 32, activation="relu") (encoded)
+x =Conv2DTranspose(
+    filters=64,
+    kernel_size=3,
+    strides=(2, 2),
+    padding="SAME",
+    activation='relu') (x)
+x= Conv2DTranspose(
+    filters=32,
+    kernel_size=3,
+    strides=(2, 2),
+    padding="SAME",
+    activation='relu')(x)
+# No activation
+decoded = Conv2DTranspose(
+    filters=1, kernel_size=3, strides=(1, 1), padding="SAME") (x)
 # at this point the representation is (4, 4, 8) i.e. 128-dimensional
 autoencoder = Model(input_seq, decoded)
 autoencoder.compile(optimizer="adam", loss="mean_squared_error")
