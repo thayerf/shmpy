@@ -41,8 +41,8 @@ n_mutation_rounds = 10
 step_size = 0.0001
 # batch size num epochs
 batch_size = 300
-num_epochs = 1000
-steps_per_epoch = 1
+num_epochs = 10000
+steps_per_epoch = 10
 # flag to include ber_pathway
 ber_pathway = 1
 
@@ -159,6 +159,7 @@ history = autoencoder.fit_generator(
     epochs=num_epochs,
     steps_per_epoch=steps_per_epoch,
     validation_data=(t_batch_data, t_batch_labels),
+    verbose = 2
 )
 temp = np.mean(t_batch_labels, axis = (0,1))
 means = np.swapaxes([np.repeat(temp[0],308),np.repeat(temp[1],308),np.repeat(temp[2],308)],0,1)
