@@ -1,6 +1,6 @@
 import pkgutil
 from pathlib import Path
-
+import numpy as np
 import click
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
@@ -104,11 +104,8 @@ x = Conv2D(16, (3, 4), activation="relu", padding="same")(input_seq)
 x = MaxPooling2D((2, 1), padding="same")(x)
 x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
 x = MaxPooling2D((2, 2), padding="same")(x)
-x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
-encoded = MaxPooling2D((2, 2), padding="same")(x)
 
 # Now we decode back up
-x = Dense(units=7 * 7 * 32, activation="relu") (encoded)
 x =Conv2DTranspose(
     filters=64,
     kernel_size=3,
@@ -122,8 +119,12 @@ x= Conv2DTranspose(
     padding="SAME",
     activation='relu')(x)
 # No activation
-decoded = Conv2DTranspose(
-    filters=1, kernel_size=3, strides=(1, 1), padding="SAME") (x)
+x = Conv2DTranspose(
+    filters=1, kernel_size=3, strides=(1, 1), padding="SAME", activation = 'relu') (x)
+x = Flatten()(x)
+decoded = Dense(units = 308*3, activation = 'relu')(x)
+decoded = Reshape((308,3))(decoded)
+
 # at this point the representation is (4, 4, 8) i.e. 128-dimensional
 autoencoder = Model(input_seq, decoded)
 autoencoder.compile(optimizer="adam", loss="mean_squared_error")
@@ -159,13 +160,17 @@ history = autoencoder.fit_generator(
     steps_per_epoch=steps_per_epoch,
     validation_data=(t_batch_data, t_batch_labels),
 )
+temp = np.mean(t_batch_labels, axis = (0,1))
+means = np.swapaxes([np.repeat(temp[0],308),np.repeat(temp[1],308),np.repeat(temp[2],308)],0,1)
 
-print(np.mean(np.square(t_batch_labels)))
+print("Null Model Loss:")
+print(np.mean(np.square(t_batch_labels-means)))
+print("Conv/Deconv Model Loss:")
 print(min(history.history["val_loss"]))
 
 # Save predictions and labels
-np.savetxt(Path("sims/", "labels"), t_batch_labels, delimiter=",")
-np.savetxt(Path("sims/", "preds"), autoencoder.predict(t_batch_data))
+np.savetxt(Path("../sims/", "labels"), t_batch_labels, delimiter=",")
+np.savetxt(Path("../sims/", "preds"), autoencoder.predict(t_batch_data))
 # Save  model loss
-np.savetxt(Path("sims/", "loss"), history.history["val_loss"])
-autoencoder.save(Path("sims/", "model"))
+np.savetxt(Path("..sims/", "loss"), history.history["val_loss"])
+autoencoder.save(Path("..sims/", "model"))
