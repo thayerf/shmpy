@@ -1,15 +1,10 @@
 import pkgutil
 from pathlib import Path
 import numpy as np
-import click
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 from SHMModels.fitted_models import ContextModel
 from keras import optimizers, Input, Model
-
-# Path to germline sequence
-from build_nns import build_nn
-from genDat import *
 from genDat import hot_encode_2d, gen_batch
 from keras.models import Sequential
 from keras.layers import (
@@ -28,6 +23,7 @@ from keras.layers import (
 
 ##### USER INPUTS (Edit some of these to be CLI eventually)
 
+# Path to germline sequence
 germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating
 context_model_length = 3
@@ -36,13 +32,13 @@ context_model_pos_mutating = 2
 aid_context_model = "data/aid_logistic_3mer.csv"
 # Num seqs and n_mutation rounds
 n_seqs = 1
-n_mutation_rounds = 10
+n_mutation_rounds = 1
 # step size
 step_size = 0.0001
 # batch size num epochs
 batch_size = 300
 num_epochs = 10000
-steps_per_epoch = 10
+steps_per_epoch = 1
 # flag to include ber_pathway
 ber_pathway = 1
 
@@ -95,37 +91,33 @@ junk = gen_batch(
     ber_pathway,
 )
 t_batch_data = junk["seqs"][:, 0, :, :, :]
-t_batch_labels = np.swapaxes(junk["mechs"][:, 0, :, :], 1, 2)
+# Just use the lesion sites (1st argument in 3rd position) as label
+t_batch_labels = junk["mechs"][:, 0, 0, :]
 
-# Let's build our encoder
+# Let's build our encoder. Seq is of length 308.
 input_seq = Input(shape=(308, 4, 1))
 
+# We add 2 convolutional layers.
 x = Conv2D(16, (3, 4), activation="relu", padding="same")(input_seq)
 x = MaxPooling2D((2, 1), padding="same")(x)
 x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
 x = MaxPooling2D((2, 2), padding="same")(x)
 
 # Now we decode back up
-x =Conv2DTranspose(
-    filters=64,
-    kernel_size=3,
-    strides=(2, 2),
-    padding="SAME",
-    activation='relu') (x)
-x= Conv2DTranspose(
-    filters=32,
-    kernel_size=3,
-    strides=(2, 2),
-    padding="SAME",
-    activation='relu')(x)
-# No activation
 x = Conv2DTranspose(
-    filters=1, kernel_size=3, strides=(1, 1), padding="SAME", activation = 'relu') (x)
+    filters=64, kernel_size=3, strides=(2, 2), padding="SAME", activation="relu"
+)(x)
+x = Conv2DTranspose(
+    filters=32, kernel_size=3, strides=(2, 2), padding="SAME", activation="relu"
+)(x)
+x = Conv2DTranspose(
+    filters=1, kernel_size=3, strides=(1, 1), padding="SAME", activation="relu"
+)(x)
 x = Flatten()(x)
-decoded = Dense(units = 308*3, activation = 'relu')(x)
-decoded = Reshape((308,3))(decoded)
+# I think ReLU is fine here because the values are nonnegative?
+decoded = Dense(units=308, activation="relu")(x)
 
-# at this point the representation is (4, 4, 8) i.e. 128-dimensional
+# at this point the "decoded" representation is a 308 vector indicating our predicted # of lesions at each site.
 autoencoder = Model(input_seq, decoded)
 autoencoder.compile(optimizer="adam", loss="mean_squared_error")
 
@@ -148,8 +140,8 @@ def genTraining(batch_size):
             4,
             ber_pathway,
         )
-        # We repeat the labels for each x in the sequence
-        batch_labels = np.swapaxes(dat["mechs"][:, 0, :, :], 1, 2)
+        # Get lesion sites and 2d encoded sequence
+        batch_labels = dat["mechs"][:, 0, 0, :]
         batch_data = dat["seqs"][:, 0, :, :, :]
         yield batch_data, batch_labels
 
@@ -159,13 +151,13 @@ history = autoencoder.fit_generator(
     epochs=num_epochs,
     steps_per_epoch=steps_per_epoch,
     validation_data=(t_batch_data, t_batch_labels),
-    verbose = 2
+    verbose=2,
 )
-temp = np.mean(t_batch_labels, axis = (0,1))
-means = np.swapaxes([np.repeat(temp[0],308),np.repeat(temp[1],308),np.repeat(temp[2],308)],0,1)
+temp = np.mean(t_batch_labels)
+means = np.repeat(temp, 308)
 
 print("Null Model Loss:")
-print(np.mean(np.square(t_batch_labels-means)))
+print(np.mean(np.square(t_batch_labels - means)))
 print("Conv/Deconv Model Loss:")
 print(min(history.history["val_loss"]))
 
