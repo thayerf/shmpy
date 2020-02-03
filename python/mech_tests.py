@@ -95,15 +95,21 @@ t_batch_data = junk["seqs"][:, 0, :, :, :]
 t_batch_labels = junk["mechs"][:, 0, 0, :]
 # Get indicators of mutations
 sums = (np.sum(t_batch_data == orig_seq, axis = 2)!=4).reshape(batch_size,308,1,1)
+sums1 = np.zeros(np.shape(sums))
+sums2 = np.zeros(np.shape(sums))
 # Get Local averages and add them to the test data
 for i in range(batch_size):
-      sums[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,50),'same')
-t_batch_data = np.append(t_batch_data, sums, axis = 2)
+      sums1[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,50),'same')
+t_batch_data = np.append(t_batch_data, sums1, axis = 2)
+# Get Local averages and add them to the test data
+for i in range(batch_size):
+      sums2[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,10),'same')
+t_batch_data = np.append(t_batch_data, sums2, axis = 2)
 # Let's build our encoder. Seq is of length 308.
-input_seq = Input(shape=(308, 5, 1))
+input_seq = Input(shape=(308, 6, 1))
 
 # We add 2 convolutional layers.
-x = Conv2D(16, (3, 5), activation="relu", padding="same")(input_seq)
+x = Conv2D(16, (3, 6), activation="relu", padding="same")(input_seq)
 x = MaxPooling2D((2, 1), padding="same")(x)
 x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
 x = MaxPooling2D((2, 2), padding="same")(x)
@@ -149,9 +155,14 @@ def genTraining(batch_size):
         batch_labels = dat["mechs"][:, 0, 0, :]
         batch_data = dat["seqs"][:, 0, :, :, :]
         sums = (np.sum(batch_data == orig_seq, axis = 2)!=4).reshape(batch_size,308,1,1)
+        sums1 = np.zeros(np.shape(sums))
+        sums2 = np.zeros(np.shape(sums))
         for i in range(batch_size):
-              sums[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,50), 'same')
-        batch_data = np.append(batch_data, sums, axis = 2)    
+              sums1[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,50), 'same')
+        batch_data = np.append(batch_data, sums1, axis = 2)  
+        for i in range(batch_size):
+              sums2[i,:,0,0] = np.convolve(sums[i,:,0,0],np.repeat(1,10), 'same')
+        batch_data = np.append(batch_data, sums2, axis = 2)
         yield batch_data, batch_labels
 
 # Train
