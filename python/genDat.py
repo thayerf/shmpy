@@ -1,12 +1,24 @@
-from SHMModels.simulate_mutations import simulate_sequences_abc
-from SHMModels.simulate_mutations import memory_simulator
-
 # We would like to simulate sequences in place, with the fasta file and context model loaded into memory
 # This way we can simulate A LOT of training data without writing to disk (slow)
 import numpy as np
 from scipy.special import logit
 from sklearn.preprocessing import scale
+import pkgutil
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+from SHMModels.mutation_processing import *
+from SHMModels.fitted_models import *
+from SHMModels.simulate_mutations import *
 
+# Set Model Parameters (they don't change across prior samples)
+pol_eta_params = {
+            "A": [0.9, 0.02, 0.02, 0.06],
+            "G": [0.01, 0.97, 0.01, 0.01],
+            "C": [0.01, 0.01, 0.97, 0.01],
+            "T": [0.06, 0.02, 0.02, 0.9],
+        }
+ber_params = np.random.dirichlet([1, 1, 1, 1])
+cm = aid_context_model = ContextModel(3, 2, pkgutil.get_data("SHMModels", "data/aid_goodman.csv"))
 # Get a 2d hot encoding of a sequence
 def hot_encode_2d(seq):
     seq_hot = np.zeros((len(seq), 4, 1))
@@ -28,95 +40,21 @@ def hot_encode_1d(seq):
         seq_hot[4 * j + 3] = seq[j] == "C"
     return seq_hot
 
-
-# Generate a batch of mutated sequences with given encoding
-def gen_batch(
-    batch_size,
-    sequence,
-    aid_model,
-    n_seqs,
-    n_mutation_rounds,
-    orig_seq,
-    means,
-    sds,
-    encoding_type,
-    encoding_length,
-    ber_pathway,
-):
-    params, seqs, mech = memory_simulator(
-        sequence, aid_model, n_seqs, n_mutation_rounds, batch_size, ber_pathway
-    )
-    seqs = seqs[:, 0]
-    seqs = [i.decode("utf-8") for i in seqs]
-    seqs = [list(i) for i in seqs]
-    # PUT 1 DIM ENCODING INFO HERE
-    if encoding_type == 1:
-        None
-    elif encoding_type == 2:
-        if encoding_length == 1:
-            raise RuntimeError("Can't 1d encode 2d network input")
-        else:
-            seqs_hot = np.zeros(
-                (len(seqs) // n_seqs, n_seqs, len(seqs[1]), encoding_length, 1)
-            )
-            for i in range(len(seqs)):
-                seqs_hot[i // n_seqs, i % n_seqs, :, 0:4, :] = hot_encode_2d(seqs[i])
-            if encoding_length == 9:
-                orig_seq_rep = np.repeat(orig_seq, n_seqs * batch_size, axis=2)
-                orig_seq_rep = np.moveaxis(orig_seq_rep, -1, 0)
-                orig_seq_rep = orig_seq_rep.reshape((batch_size, n_seqs, 308, 4, 1))
-                seqs_hot[:, :, :, 4:8, :] = orig_seq_rep
-                seqs_hot[:, :, :, 8, :] = (
-                    seqs_hot[:, :, :, 0:4, :] == seqs_hot[:, :, :, 4:8, :]
-                ).all(axis=3)
-            elif encoding_length != 4:
-                raise RuntimeError(
-                    "Not a valid encoding dimension (must be 1, 4, or 9)"
-                )
-    if ber_pathway:
-        params[:, 4:8] = logit(params[:, 4:8])
-
-    return {
-        "seqs": seqs_hot,
-        "params": params,
-        "mechs": mech.reshape((batch_size, n_seqs, 3, len(orig_seq))),
-    }
-
-
-def gen_batch_1d(
-    batch_size,
-    sequence,
-    aid_model,
-    n_seqs,
-    n_mutation_rounds,
-    orig_seq,
-    means,
-    sds,
-    encoding,
-    ber_pathway,
-):
-    params, seqs = memory_simulator(
-        sequence, aid_model, n_seqs, n_mutation_rounds, batch_size, ber_pathway
-    )
-    seqs = seqs[:, 0]
-    seqs = [i.decode("utf-8") for i in seqs]
-    seqs = [list(i) for i in seqs]
-    # 0 is 9 dim encoding
-    if encoding == 0:
-        seqs_hot = np.zeros((len(seqs) // n_seqs, n_seqs, len(seqs[1]) * 9))
-        for i in range(len(seqs)):
-            seqs_hot[i // n_seqs, i % n_seqs, 0:4, :] = hot_encode_1d(seqs[i])
-        #### ENCODE SEQ AND INDICATOR HERE
-    # 1 is 4 dim encoding
-    if encoding == 1:
-        seqs_hot = np.zeros((len(seqs) // n_seqs, n_seqs, len(seqs[1]) * 4))
-        for i in range(len(seqs)):
-            seqs_hot[i // n_seqs, i % n_seqs, :] = hot_encode_1d(seqs[i])
-
-    if encoding == 2:
-        np.zeros((len(seqs) // n_seqs, n_seqs, len(seqs[1])))
-        ##### ENCODE INDICATOR HERE
-    if ber_pathway:
-        params[:, 4:8] = logit(params[:, 4:8])
-    params = (params - means) / sds
-    return {"seqs": seqs_hot, "params": params}
+# Get batch
+def gen_batch(seq,batch_size):
+      mut = np.zeros((batch_size,np.shape(seq)[0],4,1))
+      les = np.zeros((batch_size,np.shape(seq)[0]))
+      mp = MutationProcess(seq,
+                           aid_context_model = cm,
+                           ber_params = ber_params,
+                           pol_eta_params = pol_eta_params,
+                           ber_lambda = .0100,
+                           mmr_lambda = .0100,
+                           overall_rate = 10,
+                           show_process = False)
+      for i in range(batch_size):
+            mp.generate_mutations()
+            mut[i,:,:,:] = hot_encode_2d(mp.repaired_sequence[0,:])
+            les[i,:] = np.sum(mp.aid_lesions_per_site, axis = 0)
+      return les, mut
+      

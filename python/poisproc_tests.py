@@ -21,8 +21,6 @@ from keras.layers import (
     UpSampling2D,
 )
 
-from attn_augconv import augmented_conv2d
-
 ##### USER INPUTS (Edit some of these to be CLI eventually)
 
 # Path to germline sequence
@@ -38,35 +36,10 @@ n_mutation_rounds = 1
 # step size
 step_size = 0.0001
 # batch size num epochs
-batch_size = 300
+batch_size = 10
 num_epochs = 10000
 steps_per_epoch = 1
-# flag to include ber_pathway
-ber_pathway = 1
 
-# Means and sds from set of 5000 prior samples (logit transform 4:8)
-means = [
-    0.50228154,
-    26.8672,
-    0.08097563,
-    0.07810973,
-    -1.52681097,
-    -1.49539369,
-    -1.49865018,
-    -1.48759332,
-    0.50265601,
-]
-sds = [
-    0.29112116,
-    12.90099082,
-    0.1140593,
-    0.11241542,
-    1.42175933,
-    1.43498051,
-    1.44336424,
-    1.43775417,
-    0.28748498,
-]
 
 # Load sequence into memory
 sequence = list(
@@ -77,31 +50,14 @@ aid_model_string = pkgutil.get_data("SHMModels", aid_context_model)
 aid_model = ContextModel(
     context_model_length, context_model_pos_mutating, aid_model_string
 )
-orig_seq = hot_encode_2d(sequence)
-# Create testing data
-junk = gen_batch(
-    batch_size,
-    sequence,
-    aid_model,
-    n_seqs,
-    n_mutation_rounds,
-    orig_seq,
-    means,
-    sds,
-    2,
-    4,
-    ber_pathway,
-)
-t_batch_data = junk["seqs"][:, 0, :, :, :]
-# Just use the lesion sites (1st argument in 3rd position) as label
-t_batch_labels = junk["mechs"][:, 0, 0, :]
+
+t_batch_labels, t_batch_data = gen_batch(sequence.seq, 10)
 
 # Let's build our encoder. Seq is of length 308.
 input_seq = Input(shape=(308, 4, 1))
-x = augmented_conv2d(input_seq, filters=16, kernel_size=(3, 4),
-                         depth_k=0.2, depth_v=0.2,  # dk/v (0.2) * f_out (20) = 4
-                         num_heads=3, relative_encodings=True)
+
 # We add 2 convolutional layers.
+x = Conv2D(16, (3, 6), activation="relu", padding="same")(input_seq)
 x = MaxPooling2D((2, 1), padding="same")(x)
 x = Conv2D(8, (3, 3), activation="relu", padding="same")(x)
 x = MaxPooling2D((2, 2), padding="same")(x)
@@ -130,23 +86,8 @@ print(autoencoder.summary(90))
 def genTraining(batch_size):
     while True:
         # Get training data for step
-        dat = gen_batch(
-            batch_size,
-            sequence,
-            aid_model,
-            n_seqs,
-            n_mutation_rounds,
-            orig_seq,
-            means,
-            sds,
-            2,
-            4,
-            ber_pathway,
-        )
-        # Get lesion sites and 2d encoded sequence
-        batch_labels = dat["mechs"][:, 0, 0, :]
-        batch_data = dat["seqs"][:, 0, :, :, :]
-        yield batch_data, batch_labels
+        les,mut = gen_batch(sequence.seq,batch_size)
+        yield mut,les
 
 # Train
 history = autoencoder.fit_generator(

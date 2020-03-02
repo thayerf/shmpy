@@ -42,29 +42,6 @@ steps_per_epoch = 1
 # flag to include ber_pathway
 ber_pathway = 1
 
-# Means and sds from set of 5000 prior samples (logit transform 4:8)
-means = [
-    0.50228154,
-    26.8672,
-    0.08097563,
-    0.07810973,
-    -1.52681097,
-    -1.49539369,
-    -1.49865018,
-    -1.48759332,
-    0.50265601,
-]
-sds = [
-    0.29112116,
-    12.90099082,
-    0.1140593,
-    0.11241542,
-    1.42175933,
-    1.43498051,
-    1.44336424,
-    1.43775417,
-    0.28748498,
-]
 
 # Load sequence into memory
 sequence = list(
