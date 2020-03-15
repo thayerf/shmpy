@@ -44,7 +44,8 @@ def hot_encode_1d(seq):
 def gen_batch(seq,batch_size):
       mut = np.zeros((batch_size,np.shape(seq)[0],4,1))
       les = np.zeros((batch_size,np.shape(seq)[0]))
-      mp = MutationProcess(seq,
+      for i in range(batch_size):
+            mp = MutationProcess(seq,
                            aid_context_model = cm,
                            ber_params = ber_params,
                            pol_eta_params = pol_eta_params,
@@ -52,9 +53,30 @@ def gen_batch(seq,batch_size):
                            mmr_lambda = .0100,
                            overall_rate = 10,
                            show_process = False)
-      for i in range(batch_size):
             mp.generate_mutations()
             mut[i,:,:,:] = hot_encode_2d(mp.repaired_sequence[0,:])
             les[i,:] = np.sum(mp.aid_lesions_per_site, axis = 0)
       return les, mut
+
+
+# Get batch
+def gen_batch_letters(seq,batch_size):
+      mut = np.zeros((batch_size,np.shape(seq)[0],4,1))
+      les = np.zeros((batch_size,np.shape(seq)[0]))
+      let = []
+      for i in range(batch_size):
+            mp = MutationProcess(seq,
+                           aid_context_model = cm,
+                           ber_params = ber_params,
+                           pol_eta_params = pol_eta_params,
+                           ber_lambda = .0100,
+                           mmr_lambda = .0100,
+                           overall_rate = 10,
+                           show_process = False)
+            mp.generate_mutations()
+            
+            mut[i,:,:,:] = hot_encode_2d(mp.repaired_sequence[0,:])
+            les[i,:] = np.sum(mp.aid_lesions_per_site, axis = 0)
+            let.append(mp.repaired_sequence[0,:])
+      return les, mut, let
       
