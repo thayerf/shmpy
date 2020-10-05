@@ -23,6 +23,7 @@ from keras.layers import (
     UpSampling2D,
 )
 import scipy
+import scipy.stats
 import math
 from imp_sam import *
 from minisim import *
@@ -44,7 +45,7 @@ n_mutation_rounds = 1
 step_size = 0.01
 # batch size num epochs
 batch_size = 500
-num_epochs = 1000
+num_epochs = 500
 steps_per_epoch = 1
 gl1 = list(list(
     SeqIO.parse(germline_sequence, "fasta", alphabet=IUPAC.unambiguous_dna)
@@ -53,8 +54,8 @@ germline = list(list(
     SeqIO.parse(germline_sequence, "fasta", alphabet=IUPAC.unambiguous_dna)
 )[0].seq)
 
-start = float(sys.argv[1])
-true = float(sys.argv[2])
+start = np.random.uniform()
+true = np.random.uniform()
 
 # .01, .025
 start_model_params = { "base_rate" : 0.25,
@@ -139,7 +140,7 @@ history = autoencoder.fit_generator(
 )
 
 
-real_sample, real_labels  = gen_batch(germline,true_model_params, 300)
+real_sample, real_labels  = gen_batch(germline,true_model_params, 300,c_array)
 pred_labels = autoencoder.predict(real_sample)
 
 current_model_params = start_model_params
@@ -180,9 +181,20 @@ for i in range(300):
         x_list.append(np.append(complete_data["A"], imp_sam["A_tilde"]))
         g_list.append(imp_sam["g"])
         w_list.append(imp_sam["w"])
-l_test = np.linspace(.001, .1, 40)
+l_test = np.linspace(.001, .999, 50)
 grid,probs = lengthscale_inference(x_list, g_list, w_list, l_test_grid = l_test, model_params = current_model_params, full_grid = True)
-plt.plot(l_test,probs)
-plt.axvline(x=start_model_params["lengthscale"], color = 'r')
-plt.axvline(x= true_model_params["lengthscale"], color = 'g')
-plt.axvline(x = l_test[np.argmax(probs)], color = 'y')
+print(start)
+print(grid[np.argmax(probs)])
+print(true)
+file1 = open("start","a")
+file2 = open("first","a")
+file3 = open("true","a")
+temp = [str(start),","]
+file1.writelines(temp)
+temp = [str(grid[np.argmax(probs)]),","]
+file2.writelines(temp)
+temp = [str(true),","]
+file3.writelines(temp)
+file1.close()
+file2.close()
+file3.close()
