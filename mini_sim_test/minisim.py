@@ -23,7 +23,7 @@ def forward_sample_sequence_sgcp(sequence, params,c_array):
             x = np.append(x, conts)
     N = np.size(x)
     K = make_se_kernel(x, params['lengthscale'], params['gp_sigma'], params['gp_ridge'])
-    lambda_of_x = np.random.multivariate_normal(mean = np.zeros(N), cov = K)
+    lambda_of_x = np.random.multivariate_normal(mean = params['gp_offset'] + np.zeros(N), cov = K)
     sigma_lambda_of_x = 1 / (1 + np.exp(-lambda_of_x))
     uniforms = np.random.uniform(low = 0, high = 1, size = len(x))
     A_and_g = [(xi, li) for (xi, si, li, u) in zip(x, sigma_lambda_of_x, lambda_of_x, uniforms) if u < si]

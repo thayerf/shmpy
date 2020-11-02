@@ -54,19 +54,21 @@ germline = list(list(
     SeqIO.parse(germline_sequence, "fasta", alphabet=IUPAC.unambiguous_dna)
 )[0].seq)
 
-start = np.random.uniform(high=0.08)
-true = np.random.uniform(high=0.08)
+start = np.random.uniform(high=0.05)
+true = np.random.uniform(high=0.05)
 
 # .01, .025
 start_model_params = { "base_rate" : 0.25,
                        "lengthscale" : start,
-                       "gp_sigma" : 2.0,
-                       "gp_ridge" : .1
+                       "gp_sigma" : 10.0,
+                       "gp_ridge" : .1,
+                       "gp_offset" : 12.0
 }
 true_model_params = { "base_rate" : 0.25,
                        "lengthscale" : true,
                        "gp_sigma" : 2.0,
-                       "gp_ridge" : .1
+                       "gp_ridge" : .1,
+                       "gp_offset": 12.0
 }
 print(start_model_params)
 print(true_model_params)
@@ -186,9 +188,9 @@ grid,probs = lengthscale_inference(x_list, g_list, w_list, l_test_grid = l_test,
 print(start)
 print(grid[np.argmax(probs)])
 print(true)
-file1 = open("narrow/start","a")
-file2 = open("narrow/first","a")
-file3 = open("narrow/true","a")
+file1 = open("big/start","a")
+file2 = open("big/first","a")
+file3 = open("big/true","a")
 temp = [str(start),","]
 file1.writelines(temp)
 temp = [str(grid[np.argmax(probs)]),","]
