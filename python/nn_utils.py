@@ -13,25 +13,13 @@ def hot_encode_2d(seq):
     return seq_hot
 
 
-# Discrete to interval, but for whole vector
-def conv_to_short(A_long, A_tilde_long, g_long):
-    g = []
-    A = []
-    A_tilde = []
-    for p in range(len(A_tilde_long)):
-        if A_long[p] > 0:
-            for q in range(int(A_long[p])):
-                g = np.append(g, g_long[p])
-                A = np.append(A, cpf.discrete_to_interval(p, len(A_long)))
-    for p in range(len(A_tilde_long)):
-        if A_tilde_long[p] > 0:
-            for q in range(int(A_tilde_long[p])):
-                g = np.append(g, g_long[p])
-                A_tilde = np.append(A_tilde, cpf.discrete_to_interval(p, len(A_long)))
-    return A, A_tilde, g
-
-
 # Generate batch of mutated seqs in nn friendly format
+#' @param germline: Germline sequence
+#' @param c_array: Array of c indicators from germline
+#' @param params: Model parameter specification dict
+#' @param ber_params: Transition probabilities for BER
+#' @batch_size: Number of sequences to sample
+#' Returns hot encoded mutated sequence and latent state labels
 def gen_nn_batch(germline, c_array, params, ber_params, batch_size):
     mut = []
     lat = []
@@ -52,6 +40,12 @@ def gen_nn_batch(germline, c_array, params, ber_params, batch_size):
 
 
 # Generate batch of mutated seqs in nn friendly format and keep char vec of seqs
+#' @param germline: Germline sequence
+#' @param c_array: Array of c indicators from germline
+#' @param params: Model parameter specification dict
+#' @param ber_params: Transition probabilities for BER
+#' @batch_size: Number of sequences to sample
+#' Returns hot encoded mutated sequence and latent state labels, as well as seq char vecs
 def gen_batch_with_seqs(germline, c_array, params, ber_params, batch_size):
     mut = []
     lat = []

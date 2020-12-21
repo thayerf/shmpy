@@ -51,7 +51,7 @@ def cond_variance(y_true, y_pred):
     ind = K.cast((y_true[:, :, 1] + y_true[:, :, 2]) > 0, "float32")
     return K.mean(K.square(g_true - g_pred))
 
-
+# Build NN for sequence on length seq_length
 def build_nn(seq_length):
     # Let's build our encoder.
     input_seq = Input(shape=(seq_length, 4, 1))
