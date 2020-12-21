@@ -31,6 +31,7 @@ c_array = np.zeros(n)
 for i in range(n):
     c_array[i] = 1.0 * (germline[i] == "C")
 
+ls = np.random.uniform(low = 0.0, high = 0.1)
 # Starting and true params for inference
 start_model_params = {
     "base_rate": 300.0,
@@ -41,7 +42,7 @@ start_model_params = {
 }
 
 true_model_params = { "base_rate" : 300.0,
-                       "lengthscale" : .02,
+                       "lengthscale" : ls,
                        "gp_sigma" : 10.0,
                        "gp_ridge" : .05,
                        "gp_offset": -10

@@ -243,10 +243,10 @@ def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, b
     seq = complete_data["S_1"]
     
     # Define the conditional means from "complete data"
-    # Lesions mean equation
-    A_mean = complete_data["A"]
+    # Lesions mean equation (only count c sits and threshold by 0)
+    A_mean = np.multiply(np.maximum(complete_data["A"],0.0),c_array)
     # Prelesions mean equation (minus lesions mean equation)
-    A_tilde_mean = complete_data["A_tilde"]
+    A_tilde_mean = np.multiply(np.maximum(complete_data["A_tilde"],0.0),c_array)
     # GP mean equation
     g = complete_data["g"]
     
@@ -258,7 +258,7 @@ def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, b
     A_tilde_long = sample_pois_mean(c_array, A_tilde_mean)
     
     
-    # Form interval vectprs from discrete vectors
+    # Form interval vectors from discrete vectors
     A, A_tilde, g_mean = conv_to_short(A_long, A_tilde_long, g)
     
     # Form kernel and sample g
@@ -274,17 +274,22 @@ def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, b
     # For the GP
     # q_3 likelihood from weights equation
     if len(g_mean) > 0 :
+          # GP with mean vector equal to NN output.
           g_is_log_prob = scipy.stats.multivariate_normal.logpdf(g_sample - g_mean,mean =             np.zeros(len(g_sample)), cov = K)
     else: 
-          g_is_log_prob = 1.0
+          g_is_log_prob = 0.0
           
     # For the pois
     
-    # This term is the sum of pois w/ diff intensities over c_array? CALC THIS
-    # Need q_1,q_2 likelihoods here.... sum of poissons with diff intensities?
-    pois_is_log_prob = 0.0
+    # This term is the sum of pois w/ diff intensities
+    q2_log_prob = np.sum(scipy.stats.poisson.logpmf(k = A_long, mu = A_mean))
+    q1_log_prob = np.sum(scipy.stats.poisson.logpmf(k = A_tilde_long, mu = A_tilde_mean))
+    pois_is_log_prob = q2_log_prob +q1_log_prob
     
+    
+    # Sum logs of q1,q2,q3
     is_log_prob = g_is_log_prob + pois_is_log_prob
+    
     # This calculates log prob assuming A, A_tilde, g are  latent states (numerator of weights equation)
     complete_data_log_prob = sequence_complete_data_log_prob(
         seq,
@@ -342,14 +347,12 @@ def sequence_log_prob_given_lesions(seq, gl_seq, A, ber_params):
         log_p = log_p + np.log(ber_params[seq[i]])
     return log_p
 
-#' @param c_array: Indicators of c locations
+
 #' @param A: Poisson mean vector for per-site importance sampling
 #' @return Newly sampled A in discrete format
-def sample_pois_mean(c_array,A):
-      # Remove negative entries
-      A_adj = np.maximum(A,0)
+def sample_pois_mean(A):
       # Sample from new A and only count lesions at C sites
-      new_A = np.multiply(c_array,np.random.poisson(lam = A_adj))
+      new_A = np.random.poisson(lam = A)
       return new_A
 
 
