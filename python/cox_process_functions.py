@@ -313,8 +313,8 @@ def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, b
 #' @param model_params: A dict with the current model params
 #' @return The complete-data log probability of seq, A, A_tilde, g given the current model parameters.
 def sequence_complete_data_log_prob(seq, gl_seq, A, A_tilde, g, model_params, ber_params):
-    # TODO adjust lambda to account for c_array?
-    lambda_star = model_params["base_rate"]
+    # Adjust lambda_star to only include fraction of unit interval corresponding to C sites
+    lambda_star = model_params["base_rate"] * np.mean([i == 'C' for i in gl_seq])
     lengthscale = model_params["lengthscale"]
     sigma = model_params["gp_sigma"]
     gp_ridge = model_params["gp_ridge"]
