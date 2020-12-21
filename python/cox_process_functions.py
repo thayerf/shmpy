@@ -130,25 +130,17 @@ def thinning_log_prob(g, K, M):
 #' @param gp_ridge: Ridge for the GP
 #' @return: Log probability of the complete data for the SGCP
 def sgcp_complete_data_log_prob(
-    A,
-    A_tilde,
-    g,
-    lambda_star,
-    lengthscale,
-    sigma,
-    gp_ridge,
-    gp_offset,
+    A, A_tilde, g, lambda_star, lengthscale, sigma, gp_ridge, gp_offset,
 ):
     K = len(A)
     M = len(A_tilde)
-    
+
     # P(A_k^{*i}) in weights equation
     pois = (K + M) * np.log(lambda_star) - lambda_star - math.lgamma(K + M + 1)
-    
+
     # P(A_k^i | A_k^{*i} G_k^i) in weights equation
     thinning = thinning_log_prob(g, K, M)
-    
-    
+
     gp_kern_ridged = make_se_kernel(
         np.append(np.array(A), A_tilde), lengthscale, sigma, gp_ridge
     )
@@ -158,7 +150,7 @@ def sgcp_complete_data_log_prob(
             g, mean=gp_offset + np.zeros(len(g)), cov=gp_kern_ridged
         )
     )
-    return (pois + thinning + gp)
+    return pois + thinning + gp
 
 
 def logistic(x):
@@ -226,6 +218,7 @@ def complete_data_sample_around_true_states_sgcp(
     log_w = complete_data_log_prob - is_log_prob
     return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w)}
 
+
 #' @param seq: The observed sequence
 #' @param gl_seq: The germline sequence
 #' @param c_array: An indicator of c locations in germline
@@ -236,71 +229,71 @@ def complete_data_sample_around_true_states_sgcp(
 #' gp noise, sampling_sd is the sd of that noise (cond_var output by NN)
 #' @return: A dict, with the complete data (lesions = A, prelesions =
 #' A_tilde, GP values = g) and the weight for that sample (w)
-def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, ber_params, sampling_sd=0.1
+def complete_data_sample_around_cond_means_sgcp(
+    c_array, complete_data, params, ber_params, sampling_sd=0.1
 ):
     # Define the sequences
     gl_seq = complete_data["S"]
     seq = complete_data["S_1"]
-    
+
     # Define the conditional means from "complete data"
     # Lesions mean equation (only count c sits and threshold by 0)
-    A_mean = np.multiply(np.maximum(complete_data["A"],0.0),c_array)
+    A_mean = np.multiply(np.maximum(complete_data["A"], 0.0), c_array)
     # Prelesions mean equation (minus lesions mean equation)
-    A_tilde_mean = np.multiply(np.maximum(complete_data["A_tilde"],0.0),c_array)
+    A_tilde_mean = np.multiply(np.maximum(complete_data["A_tilde"], 0.0), c_array)
     # GP mean equation
     g = complete_data["g"]
-    
+
     # Sample lesions and prelesions from mean vectors
-    
+
     # q_2 sampling in weights equation
     A_long = sample_pois_mean(c_array, A_mean)
     # q_1 sampling in weights equation
     A_tilde_long = sample_pois_mean(c_array, A_tilde_mean)
-    
-    
+
     # Form interval vectors from discrete vectors
     A, A_tilde, g_mean = conv_to_short(A_long, A_tilde_long, g)
-    
+
     # Form kernel and sample g
-    
+
     # q_3 sampling in weights equation
-    K = make_se_kernel(np.append(np.array(A), np.array(A_tilde)), params['lengthscale'], sampling_sd, params['gp_ridge'])
-    if len(g_mean)>0:
-          lambda_of_x = np.random.multivariate_normal(mean = np.zeros(len(g_mean)), cov = K)
-          g_sample = g_mean + lambda_of_x
+    K = make_se_kernel(
+        np.append(np.array(A), np.array(A_tilde)),
+        params["lengthscale"],
+        sampling_sd,
+        params["gp_ridge"],
+    )
+    if len(g_mean) > 0:
+        lambda_of_x = np.random.multivariate_normal(mean=np.zeros(len(g_mean)), cov=K)
+        g_sample = g_mean + lambda_of_x
     else:
-          g_sample = []
+        g_sample = []
     ## Get importance sample likelihoods
     # For the GP
     # q_3 likelihood from weights equation
-    if len(g_mean) > 0 :
-          # GP with mean vector equal to NN output.
-          g_is_log_prob = scipy.stats.multivariate_normal.logpdf(g_sample - g_mean,mean =             np.zeros(len(g_sample)), cov = K)
-    else: 
-          g_is_log_prob = 0.0
-          
+    if len(g_mean) > 0:
+        # GP with mean vector equal to NN output.
+        g_is_log_prob = scipy.stats.multivariate_normal.logpdf(
+            g_sample - g_mean, mean=np.zeros(len(g_sample)), cov=K
+        )
+    else:
+        g_is_log_prob = 0.0
+
     # For the pois
-    
+
     # This term is the sum of pois w/ diff intensities
-    q2_log_prob = np.sum(scipy.stats.poisson.logpmf(k = A_long, mu = A_mean))
-    q1_log_prob = np.sum(scipy.stats.poisson.logpmf(k = A_tilde_long, mu = A_tilde_mean))
-    pois_is_log_prob = q2_log_prob +q1_log_prob
-    
-    
+    q2_log_prob = np.sum(scipy.stats.poisson.logpmf(k=A_long, mu=A_mean))
+    q1_log_prob = np.sum(scipy.stats.poisson.logpmf(k=A_tilde_long, mu=A_tilde_mean))
+    pois_is_log_prob = q2_log_prob + q1_log_prob
+
     # Sum logs of q1,q2,q3
     is_log_prob = g_is_log_prob + pois_is_log_prob
-    
+
     # This calculates log prob assuming A, A_tilde, g are  latent states (numerator of weights equation)
     complete_data_log_prob = sequence_complete_data_log_prob(
-        seq,
-        gl_seq,
-        A,
-        A_tilde,
-        g_sample,
-        params,
-        ber_params
+        seq, gl_seq, A, A_tilde, g_sample, params, ber_params
     )
-    
+
     log_w = complete_data_log_prob - is_log_prob
     return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w)}
 
@@ -312,14 +305,16 @@ def complete_data_sample_around_cond_means_sgcp(c_array,complete_data, params, b
 #' @param g: The values of the GP at [A, A_tilde]
 #' @param model_params: A dict with the current model params
 #' @return The complete-data log probability of seq, A, A_tilde, g given the current model parameters.
-def sequence_complete_data_log_prob(seq, gl_seq, A, A_tilde, g, model_params, ber_params):
+def sequence_complete_data_log_prob(
+    seq, gl_seq, A, A_tilde, g, model_params, ber_params
+):
     # Adjust lambda_star to only include fraction of unit interval corresponding to C sites
-    lambda_star = model_params["base_rate"] * np.mean([i == 'C' for i in gl_seq])
+    lambda_star = model_params["base_rate"] * np.mean([i == "C" for i in gl_seq])
     lengthscale = model_params["lengthscale"]
     sigma = model_params["gp_sigma"]
     gp_ridge = model_params["gp_ridge"]
     gp_offset = model_params["gp_offset"]
-    
+
     # Calculates last 3 terms in numerator in weights equation
     sgcp_log_prob = sgcp_complete_data_log_prob(
         A, A_tilde, g, lambda_star, lengthscale, sigma, gp_ridge, gp_offset
@@ -351,9 +346,9 @@ def sequence_log_prob_given_lesions(seq, gl_seq, A, ber_params):
 #' @param A: Poisson mean vector for per-site importance sampling
 #' @return Newly sampled A in discrete format
 def sample_pois_mean(A):
-      # Sample from new A and only count lesions at C sites
-      new_A = np.random.poisson(lam = A)
-      return new_A
+    # Sample from new A and only count lesions at C sites
+    new_A = np.random.poisson(lam=A)
+    return new_A
 
 
 # Discrete to interval, but for whole vector
@@ -372,5 +367,3 @@ def conv_to_short(A_long, A_tilde_long, g_long):
                 g = np.append(g, g_long[p])
                 A_tilde = np.append(A_tilde, discrete_to_interval(p, len(A_long)))
     return A, A_tilde, g
-
-      
