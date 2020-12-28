@@ -1,29 +1,13 @@
 # Load our stuff
-import pkgutil
-from pathlib import Path
-import numpy as np
-from Bio import SeqIO
-from Bio.Alphabet import IUPAC
-from SHMModels.fitted_models import ContextModel
-from keras import optimizers, Input, Model
-from keras.models import Sequential
 import keras.backend as K
-import matplotlib.pyplot as plt
 from keras.layers import (
     Dense,
-    TimeDistributed,
-    SimpleRNN,
-    Dropout,
     Conv2D,
     Conv2DTranspose,
     Flatten,
-    Conv1D,
     MaxPooling2D,
     Reshape,
-    UpSampling2D,
 )
-import scipy
-import math
 
 # We want a custom loss that only penalizes GP at lesion values
 def custom_loss(y_true, y_pred):

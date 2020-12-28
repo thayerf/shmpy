@@ -1,7 +1,6 @@
 # Load our stuff
 import numpy as np
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
 from nn_utils import gen_nn_batch, gen_batch_with_seqs
 from nn_infrastructure import build_nn, custom_loss, cond_variance
 from keras import optimizers
@@ -23,7 +22,7 @@ t_batch_size = 300
 
 
 germline = list(
-    list(SeqIO.parse(germline_sequence, "fasta", alphabet=IUPAC.unambiguous_dna))[0].seq
+    list(SeqIO.parse(germline_sequence, "fasta"))[0].seq
 )
 
 n = np.size(germline)
