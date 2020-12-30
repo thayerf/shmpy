@@ -14,7 +14,7 @@ context_model_pos_mutating = 2
 # Path to aid model
 aid_context_model = "data/aid_logistic_3mer.csv"
 # NN training params
-batch_size = 100
+batch_size = 300
 num_epochs = 200
 steps_per_epoch = 1
 step_size = 0.005
@@ -31,10 +31,11 @@ for i in range(n):
     c_array[i] = 1.0 * (germline[i] == "C")
 
 ls = np.random.uniform(low=0.0, high=0.1)
+ls1 = np.random.uniform(low=0.0, high=0.1)
 # Starting and true params for inference
 start_model_params = {
     "base_rate": 300.0,
-    "lengthscale": 0.05,
+    "lengthscale": ls1,
     "gp_sigma": 10.0,
     "gp_ridge": 0.05,
     "gp_offset": -10,
@@ -110,3 +111,18 @@ for i in range(t_batch_size):
         g_list.append(imp_sam["g"])
         w_list.append(imp_sam["w"])
         g_true.append(complete_data["g"])
+est = lengthscale_inference(x_list, g_list, w_list, np.linspace(0,0.1,25), start_model_params)
+true = ls
+start = ls1
+
+f = open("sims/start", "a")
+f.write(str(start) + ' ')
+f.close()
+
+f = open("sims/est", "a")
+f.write(str(est) + ' ')
+f.close()
+
+f = open("sims/true", "a")
+f.write(str(true) + ' ')
+f.close()
