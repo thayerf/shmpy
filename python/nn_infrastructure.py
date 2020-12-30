@@ -7,7 +7,9 @@ from keras.layers import (
     Flatten,
     MaxPooling2D,
     Reshape,
+    Input,
 )
+from keras import Model
 
 # We want a custom loss that only penalizes GP at lesion values
 def custom_loss(y_true, y_pred):

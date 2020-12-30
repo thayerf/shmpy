@@ -5,7 +5,13 @@ from nn_utils import gen_nn_batch, gen_batch_with_seqs
 from nn_infrastructure import build_nn, custom_loss, cond_variance
 from keras import optimizers
 import cox_process_functions as cpf
+import logging
+import os
 
+
+# We want to supress the logging from tf
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+os.environ['KMP_WARNINGS'] = '0'
 # Path to germline sequence
 germline_sequence = "data/gpt.fasta"
 # Context model length and pos_mutating

@@ -1,10 +1,10 @@
 #!/bin/bash
+source ~/.bashrc
+conda activate keras_tf
 num_sims=$1
-counter = 1
-while [ $counter -le num_sims ]
+for (( i=1;i<=$1;i++ ))
 do
 srun python test.py > output.log &
-((counter++))
 done
 
 echo "$num_sims sims submitted"
