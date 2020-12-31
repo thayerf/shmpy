@@ -9,7 +9,7 @@ import logging
 import os
 
 
-# We want to supress the logging from tf
+# We want to suppress the logging from tf
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 os.environ['KMP_WARNINGS'] = '0'
 # Path to germline sequence

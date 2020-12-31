@@ -247,9 +247,9 @@ def complete_data_sample_around_cond_means_sgcp(
     # Sample lesions and prelesions from mean vectors
 
     # q_2 sampling in weights equation
-    A_long = sample_pois_mean(c_array, A_mean)
+    A_long = sample_pois_mean(A_mean)
     # q_1 sampling in weights equation
-    A_tilde_long = sample_pois_mean(c_array, A_tilde_mean)
+    A_tilde_long = sample_pois_mean(A_tilde_mean)
 
     # Form interval vectors from discrete vectors
     A, A_tilde, g_mean = conv_to_short(A_long, A_tilde_long, g)
