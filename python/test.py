@@ -117,7 +117,7 @@ for i in range(t_batch_size):
         g_list.append(imp_sam["g"])
         w_list.append(imp_sam["w"])
         g_true.append(complete_data["g"])
-est = lengthscale_inference(x_list, g_list, w_list, np.linspace(0,0.1,25), start_model_params)
+est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0,0.1,25), start_model_params)
 true = ls
 start = ls1
 
