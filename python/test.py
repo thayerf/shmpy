@@ -21,10 +21,10 @@ context_model_pos_mutating = 2
 aid_context_model = "data/aid_logistic_3mer.csv"
 # NN training params
 batch_size = 300
-num_epochs = 200
+num_epochs = 1
 steps_per_epoch = 1
 step_size = 0.005
-t_batch_size = 300
+t_batch_size = 1000
 
 
 germline = list(
@@ -100,6 +100,7 @@ x_list = []
 g_list = []
 g_true = []
 w_list = []
+q_list = []
 for i in range(t_batch_size):
     for j in range(n_imp_samples):
 
@@ -117,7 +118,8 @@ for i in range(t_batch_size):
         g_list.append(imp_sam["g"])
         w_list.append(imp_sam["w"])
         g_true.append(complete_data["g"])
-est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0,0.1,25), start_model_params)
+        q_list.append([imp_sam["q1"],imp_sam["q2"],imp_sam["q3"]])
+est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0.00001,0.1,25), start_model_params)
 true = ls
 start = ls1
 

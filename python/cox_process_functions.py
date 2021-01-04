@@ -140,16 +140,18 @@ def sgcp_complete_data_log_prob(
 
     # P(A_k^i | A_k^{*i} G_k^i) in weights equation
     thinning = thinning_log_prob(g, K, M)
-
-    gp_kern_ridged = make_se_kernel(
-        np.append(np.array(A), A_tilde), lengthscale, sigma, gp_ridge
-    )
-    # P(G_k^i) in weights equation
-    gp = np.log(
-        scipy.stats.multivariate_normal.pdf(
-            g, mean=gp_offset + np.zeros(len(g)), cov=gp_kern_ridged
-        )
-    )
+    if K+M > 0:
+          gp_kern_ridged = make_se_kernel(
+              np.append(np.array(A), A_tilde), lengthscale, sigma, gp_ridge
+          )
+          # P(G_k^i) in weights equation
+          gp = np.log(
+              scipy.stats.multivariate_normal.pdf(
+                  g, mean=gp_offset + np.zeros(len(g)), cov=gp_kern_ridged
+              )
+          )
+    else:
+          gp = 0.0
     return pois + thinning + gp
 
 
@@ -178,8 +180,8 @@ def lengthscale_inference(x_list, g_list, weights, l_test_grid, model_params):
                 sigma=model_params["gp_sigma"],
                 gp_ridge=model_params["gp_ridge"],
             )
-            print(K)
-            g_log_p_at_test += weights[i] * np.log(
+            if len(g) > 0:
+                  g_log_p_at_test += weights[i] * np.log(
                 scipy.stats.multivariate_normal.pdf(g, cov=K)
             )
         log_probs[ls_idx] = g_log_p_at_test
@@ -295,7 +297,7 @@ def complete_data_sample_around_cond_means_sgcp(
     )
 
     log_w = complete_data_log_prob - is_log_prob
-    return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w)}
+    return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w), "q1":q1_log_prob, "q2":q2_log_prob, "q3": g_is_log_prob}
 
 
 #' @param seq: The observed sequence
