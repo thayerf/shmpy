@@ -21,7 +21,7 @@ context_model_pos_mutating = 2
 aid_context_model = "data/aid_logistic_3mer.csv"
 # NN training params
 batch_size = 300
-num_epochs = 1
+num_epochs = 200
 steps_per_epoch = 1
 step_size = 0.005
 t_batch_size = 1000
