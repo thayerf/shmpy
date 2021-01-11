@@ -152,7 +152,7 @@ def sgcp_complete_data_log_prob(
           )
     else:
           gp = 0.0
-    return pois + thinning + gp
+    return [pois + thinning + gp, [pois,thinning,gp]]
 
 
 def logistic(x):
@@ -292,12 +292,11 @@ def complete_data_sample_around_cond_means_sgcp(
     is_log_prob = g_is_log_prob + pois_is_log_prob
 
     # This calculates log prob assuming A, A_tilde, g are  latent states (numerator of weights equation)
-    complete_data_log_prob = sequence_complete_data_log_prob(
+    complete_data_log_prob, ll_list = sequence_complete_data_log_prob(
         seq, gl_seq, A, A_tilde, g_sample, params, ber_params
     )
-
     log_w = complete_data_log_prob - is_log_prob
-    return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w), "q1":q1_log_prob, "q2":q2_log_prob, "q3": g_is_log_prob}
+    return {"A": A, "A_tilde": A_tilde, "g": g_sample, "w": np.exp(log_w), "q1":q1_log_prob, "q2":q2_log_prob, "q3": g_is_log_prob, "ll_list": ll_list}
 
 
 #' @param seq: The observed sequence
@@ -318,14 +317,15 @@ def sequence_complete_data_log_prob(
     gp_offset = model_params["gp_offset"]
 
     # Calculates last 3 terms in numerator in weights equation
-    sgcp_log_prob = sgcp_complete_data_log_prob(
+    sgcp_log_prob, ll_list = sgcp_complete_data_log_prob(
         A, A_tilde, g, lambda_star, lengthscale, sigma, gp_ridge, gp_offset
     )
     # Calculates P(S^i | A_k^i)
     sequence_given_sgcp_log_prob = sequence_log_prob_given_lesions(
         seq, gl_seq, A, ber_params
     )
-    return sgcp_log_prob + sequence_given_sgcp_log_prob
+    ll_list.append(sequence_given_sgcp_log_prob)
+    return sgcp_log_prob + sequence_given_sgcp_log_prob, ll_list
 
 
 #' @param seq: The observed sequence

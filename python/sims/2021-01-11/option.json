@@ -1,0 +1,27 @@
+{
+    "batch_size": 300,
+    "num_epochs": 200,
+    "step_size": 0.005,
+    "t_batch_size": 1000,
+    "current_model_params": {
+    "base_rate": 300.0,
+    "lengthscale": 0.05,
+    "gp_sigma": 10.0,
+    "gp_ridge": 0.05,
+    "gp_offset": -10
+    },
+    "true_model_params": {
+    "base_rate": 300.0,
+    "lengthscale": 0.05,
+    "gp_sigma": 10.0,
+    "gp_ridge": 0.05,
+    "gp_offset": -10
+    },
+    "ber_params": {
+    "A": 0.25,
+    "C": 0.25, 
+    "G": 0.25, 
+    "T": 0.25
+    },
+    "n_imp_samples" : 1000
+}

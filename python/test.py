@@ -7,7 +7,11 @@ from keras import optimizers
 import cox_process_functions as cpf
 import logging
 import os
-
+import sys
+import json
+# Load options
+with open(sys.argv[1], "r") as read_file:
+    options = json.load(read_file)
 
 # We want to suppress the logging from tf
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
@@ -20,11 +24,14 @@ context_model_pos_mutating = 2
 # Path to aid model
 aid_context_model = "data/aid_logistic_3mer.csv"
 # NN training params
-batch_size = 300
-num_epochs = 200
+batch_size = options['batch_size']
+num_epochs = options['num_epochs']
+step_size = options['step_size']
+t_batch_size = options['t_batch_size']
 steps_per_epoch = 1
-step_size = 0.005
-t_batch_size = 1000
+
+# n_imp_sam
+n_imp_samples = options['n_imp_samples']
 
 
 germline = list(
@@ -35,51 +42,47 @@ n = np.size(germline)
 c_array = np.zeros(n)
 for i in range(n):
     c_array[i] = 1.0 * (germline[i] == "C")
-
+    
+# Sample lengthscales from prior
 ls = np.random.uniform(low=0.0, high=0.1)
 ls1 = np.random.uniform(low=0.0, high=0.1)
+
+
+
 # Starting and true params for inference
-start_model_params = {
-    "base_rate": 300.0,
-    "lengthscale": ls1,
-    "gp_sigma": 10.0,
-    "gp_ridge": 0.05,
-    "gp_offset": -10,
-}
+current_model_params = options['current_model_params']
+true_model_params = options['true_model_params']
 
-true_model_params = {
-    "base_rate": 300.0,
-    "lengthscale": ls,
-    "gp_sigma": 10.0,
-    "gp_ridge": 0.05,
-    "gp_offset": -10,
-}
+# Set them as random uniform
+current_model_params['lengthscale'] =  ls
+true_model_params['lengthscale'] =  ls1
 
+ber_params = options['ber_params']
 
-ber_params = {"A": 0.25, "C": 0.25, "G": 0.25, "T": 0.25}
-
-opt = optimizers.Adam(learning_rate=step_size)
-autoencoder = build_nn(308)
-autoencoder.compile(optimizer=opt, loss=custom_loss, metrics=[cond_variance])
-
-
-def genTraining(batch_size):
-    while True:
-        # Get training data for step
-        mut, les = gen_nn_batch(
-            germline, c_array, start_model_params, ber_params, batch_size
-        )
-        yield mut, les
-
-
-t_batch_data, t_batch_labels = gen_nn_batch(
-    germline, c_array, start_model_params, ber_params, t_batch_size
-)
-
+# Generate "true" sequences under actual parameter set
 real_sample, real_labels, real_seqs = gen_batch_with_seqs(
     germline, c_array, true_model_params, ber_params, t_batch_size
 )
 
+# Initialize network and optimizer
+opt = optimizers.Adam(learning_rate=step_size)
+autoencoder = build_nn(308)
+autoencoder.compile(optimizer=opt, loss=custom_loss, metrics=[cond_variance])
+
+# Define training generator
+def genTraining(batch_size):
+    while True:
+        # Get training data for step
+        mut, les = gen_nn_batch(
+            germline, c_array, current_model_params, ber_params, batch_size
+        )
+        yield mut, les
+
+# Generate test set under current model params.
+t_batch_data, t_batch_labels = gen_nn_batch(
+    germline, c_array, current_model_params, ber_params, t_batch_size
+)
+# Train Model
 history = autoencoder.fit_generator(
     genTraining(batch_size),
     epochs=num_epochs,
@@ -88,19 +91,18 @@ history = autoencoder.fit_generator(
     verbose=2,
 )
 
-
-sampling_noise_sd = np.sqrt(history.history["cond_variance"][-1])
-
+# Get predictions for real data
 pred_labels = autoencoder.predict(real_sample)
 
-current_model_params = start_model_params
-n_imp_samples = 200
+# Variance for importance distribution is based on nn mse
 sampling_noise_sd = np.sqrt(history.history["cond_variance"][-1])
+# Initialize list trackers
 x_list = []
 g_list = []
 g_true = []
 w_list = []
 q_list = []
+ll_list = []
 for i in range(t_batch_size):
     for j in range(n_imp_samples):
 
@@ -119,18 +121,9 @@ for i in range(t_batch_size):
         w_list.append(imp_sam["w"])
         g_true.append(complete_data["g"])
         q_list.append([imp_sam["q1"],imp_sam["q2"],imp_sam["q3"]])
-est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0.00001,0.1,25), start_model_params)
-true = ls
-start = ls1
+        ll_list.append(imp_sam['ll_list'])
+est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0.00001,0.1,25), current_model_params)
+true = true_model_params['lengthscale']
+start = current_model_params['lengthscale']
 
-f = open("sims/start", "a")
-f.write(str(start) + ' ')
-f.close()
 
-f = open("sims/est", "a")
-f.write(str(est) + ' ')
-f.close()
-
-f = open("sims/true", "a")
-f.write(str(true) + ' ')
-f.close()
