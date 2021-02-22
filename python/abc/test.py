@@ -5,7 +5,6 @@ import numpy as np
 from Bio import SeqIO
 from SHMModels.fitted_models import ContextModel
 from keras import optimizers, Input, Model
-from genDat import hot_encode_2d, gen_batch
 from keras.models import Sequential
 import keras.backend as K
 import matplotlib.pyplot as plt
@@ -28,7 +27,7 @@ import math
 ##### USER INPUTS (Edit some of these to be CLI eventually)
 
 # Path to germline sequence
-germline_sequence = "data/gpt.fasta"
+germline_sequence = "../data/gpt.fasta"
 # Context model length and pos_mutating
 context_model_length = 3
 context_model_pos_mutating = 2
@@ -201,9 +200,9 @@ pred_mean = np.dot(w_list,ls_list)/np.sum(w_list)
 true = true_model_params['lengthscale']
 
 f = open("est", "a")
-f.write(pred_mean + " ")
+f.write(str(pred_mean) + " ")
 f.close()
 
 f = open("true", "a")
-f.write(true + " ")
+f.write(str(true) + " ")
 f.close()
