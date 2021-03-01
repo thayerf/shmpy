@@ -51,12 +51,13 @@ germline = list(list(
 # GP OFFSET FIXED AT 12
 n_samples = 10;max_steps = 4;n_imp_samples = 1;sampling_noise_sd = .01
 def sample_prior():
-    ls = np.random.uniform(low = 0, high = 0.075)
+    ls = np.random.uniform(low = -12.0, high = -2.0)
+    sg = np.random.uniform(low = 5.0, high = 20.0)
     return { "base_rate" : 2.0,
-                       "lengthscale" :ls,
-                       "gp_sigma" : 12.0,
+                       "lengthscale" :np.exp(ls),
+                       "gp_sigma" : sg,
                        "gp_ridge" : .01,
-            "gp_offset": -12
+            "gp_offset": -10
             }
     
 n = np.size(germline)
@@ -179,30 +180,43 @@ def importance_sample(obs_sequences,n_imp_samp, n, eps):
     base_colocal = num/(deno*base_prob**2)
     ls_list = []
     w_list = []
+    sg_list = []
     for i in range(n_imp_samp):
         model_params = sample_prior()
         num, deno, base_prob, sample = get_colocal(n,model_params)
         colocal = num/(deno*base_prob**2)
         w_list.append(gauss_kernel(colocal[0:30:3], base_colocal[0:30:3],eps))
         ls_list.append(model_params['lengthscale'])
+        sg_list.append(model_params['gp_sigma'])
         if i % 50 == 0:
             print(i)
-    return ls_list, w_list, base_colocal
+    return ls_list, sg_list, w_list, base_colocal
 
 true_model_params = sample_prior()
 obs_sample,A, A_t, g = gen_batch(germline,true_model_params, 300)
 
-ls_list, w_list, base_colocal = importance_sample(obs_sample, 1000, 300, 0.2)
+ls_list, sg_list, w_list, base_colocal = importance_sample(obs_sample, 1000, 300, 0.75)
 
 
 
-pred_mean = np.dot(w_list,ls_list)/np.sum(w_list)
-true = true_model_params['lengthscale']
+pred_mean_ls = np.dot(w_list,ls_list)/np.sum(w_list)
+pred_mean_sig = np.dot(w_list, sg_list)/np.sum(w_list)
+true_ls = true_model_params['lengthscale']
+true_sig = true_model_params['gp_sigma']
 
-f = open("est", "a")
-f.write(str(pred_mean) + " ")
+f = open("est_ls", "a")
+f.write(str(pred_mean_ls) + " ")
 f.close()
 
-f = open("true", "a")
-f.write(str(true) + " ")
+f = open('est_sig', 'a')
+f.write(str(pred_mean_sig) + " ")
 f.close()
+
+f = open("true_ls", "a")
+f.write(str(true_ls) + " ")
+f.close()
+
+f = open('true_sig', 'a')
+f.write(str(true_sig) + ' ')
+f.close()
+
