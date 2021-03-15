@@ -176,12 +176,10 @@ def get_colocal(batch_size, model_params, sample = None):
 def gauss_kernel(x,y,eps):
     return np.exp(-(np.sum(np.square(x-y)))/(2*eps**2))
 
-var = np.load('vars.npy')
-
 def importance_sample(obs_sequences,n_imp_samp, n, eps):
     num, deno, base_prob, sample = get_colocal(n,true_model_params, sample = obs_sequences)
     base_colocal = (num/(deno*base_prob**2))[0:30:3]
-    base_colocal = np.append(base_colocal, base_prob)/var
+    base_colocal = np.append(base_colocal, base_prob)
     ls_list = []
     w_list = []
     sg_list = []
@@ -190,7 +188,7 @@ def importance_sample(obs_sequences,n_imp_samp, n, eps):
         model_params = sample_prior()
         num, deno, base_prob, sample = get_colocal(n,model_params)
         colocal = (num/(deno*base_prob**2))[0:30:3]
-        colocal = np.append(colocal, base_prob)/var
+        colocal = np.append(colocal, base_prob)
         w_list.append(gauss_kernel(colocal, base_colocal,eps))
         ls_list.append(model_params['lengthscale'])
         sg_list.append(model_params['gp_sigma'])
@@ -202,40 +200,11 @@ def importance_sample(obs_sequences,n_imp_samp, n, eps):
 true_model_params = sample_prior()
 obs_sample,A, A_t, g = gen_batch(germline,true_model_params, 300)
 
-rate_list, ls_list, sg_list, w_list, base_colocal = importance_sample(obs_sample, 1000, 300, 0.75)
-
-
-
-pred_mean_ls = np.dot(w_list,ls_list)/np.sum(w_list)
-pred_mean_sig = np.dot(w_list, sg_list)/np.sum(w_list)
-pred_mean_rate = np.dot(w_list, rate_list)/np.sum(w_list)
-
-true_ls = true_model_params['lengthscale']
-true_sig = true_model_params['gp_sigma']
-true_rate = true_model_params['base_rate']
-
-
-f = open("est_ls", "a")
-f.write(str(pred_mean_ls) + " ")
-f.close()
-
-f = open("est_rate","a")
-f.write(str(pred_mean_rate) + " ")
-f.close()
-
-f = open('true_rate', 'a')
-f.write(str(true_rate) + " ")
-f.close()
-
-f = open('est_sig', 'a')
-f.write(str(pred_mean_sig) + " ")
-f.close()
-
-f = open("true_ls", "a")
-f.write(str(true_ls) + " ")
-f.close()
-
-f = open('true_sig', 'a')
-f.write(str(true_sig) + ' ')
-f.close()
-
+ss_list = []
+for i in range(3000):
+    obs_sample, A, A_t, g = gen_batch(germline, true_model_params, 300)
+    num, deno, base_prob, sample = get_colocal(300, true_model_params, sample = obs_sample)
+    base_colocal = (num/(deno*base_prob**2))[0:30:3]
+    base_colocal = np.append(base_colocal, base_prob)
+    ss_list.append(base_colocal)
+np.save("vars",np.std(np.array(ss_list), axis = 0))
