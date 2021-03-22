@@ -181,7 +181,7 @@ var = np.load('vars.npy')
 def importance_sample(obs_sequences,n_imp_samp, n, eps):
     num, deno, base_prob, sample = get_colocal(n,true_model_params, sample = obs_sequences)
     base_colocal = (num/(deno*base_prob**2))[0:30:3]
-    base_colocal = np.append(base_colocal, base_prob)/var
+    base_colocal = np.append(base_colocal, base_prob*20)
     ls_list = []
     w_list = []
     sg_list = []
@@ -190,7 +190,7 @@ def importance_sample(obs_sequences,n_imp_samp, n, eps):
         model_params = sample_prior()
         num, deno, base_prob, sample = get_colocal(n,model_params)
         colocal = (num/(deno*base_prob**2))[0:30:3]
-        colocal = np.append(colocal, base_prob)/var
+        colocal = np.append(colocal, base_prob*20)
         w_list.append(gauss_kernel(colocal, base_colocal,eps))
         ls_list.append(model_params['lengthscale'])
         sg_list.append(model_params['gp_sigma'])
