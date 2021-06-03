@@ -1,7 +1,8 @@
 # Load our stuff
 import numpy as np
 from Bio import SeqIO
-from SHMModels.simulate_mutations import *
+from Bio.SeqRecord import SeqRecord
+from SHMModels.simulate_mutations import MutationRound
 from SHMModels.fitted_models import ContextModel
 import pkgutil
 import logging
@@ -147,7 +148,6 @@ pred_mean_rate = np.dot(w_list, rate_list)/np.sum(w_list)
 true_ls = true_model_params['lengthscale']
 true_sig = true_model_params['gp_sigma']
 true_rate = true_model_params['base_rate']
-true_re = true_model_params['re_var']
 
 f = open("est_ls", "a")
 f.write(str(pred_mean_ls) + " ")
