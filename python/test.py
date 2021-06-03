@@ -9,6 +9,9 @@ import logging
 import os
 import sys
 import json
+import random
+import matplotlib.pyplot as plt
+random.seed(1408)
 # Load options
 with open(sys.argv[1], "r") as read_file:
     options = json.load(read_file)
@@ -60,8 +63,8 @@ true_model_params['lengthscale'] =  ls1
 ber_params = options['ber_params']
 
 # Generate "true" sequences under actual parameter set
-real_sample, real_labels, real_seqs = gen_batch_with_seqs(
-    germline, c_array, true_model_params, ber_params, t_batch_size
+real_sample, real_labels, real_seqs, real_full_g = gen_batch_with_seqs(
+    germline, c_array, true_model_params, ber_params, t_batch_size, True
 )
 
 # Initialize network and optimizer
@@ -74,7 +77,7 @@ def genTraining(batch_size):
     while True:
         # Get training data for step
         mut, les = gen_nn_batch(
-            germline, c_array, current_model_params, ber_params, batch_size
+            germline, c_array, current_model_params, ber_params, batch_size, True
         )
         yield mut, les
 
@@ -95,7 +98,8 @@ history = autoencoder.fit_generator(
 pred_labels = autoencoder.predict(real_sample)
 
 # Variance for importance distribution is based on nn mse
-sampling_noise_sd = np.sqrt(history.history["cond_variance"][-1])
+#sampling_noise_sd = np.sqrt(history.history["cond_variance"][-1])
+sampling_noise_sd = 0.00001
 # Initialize list trackers
 x_list = []
 g_list = []
@@ -109,7 +113,7 @@ for i in range(t_batch_size):
         complete_data = {
             "A": pred_labels[i, :, 1],
             "A_tilde": pred_labels[i, :, 2],
-            "g": pred_labels[i, :, 0],
+            "g": real_full_g[i],
             "S": germline,
             "S_1": real_seqs[i],
         }
@@ -122,8 +126,44 @@ for i in range(t_batch_size):
         g_true.append(complete_data["g"])
         q_list.append([imp_sam["q1"],imp_sam["q2"],imp_sam["q3"]])
         ll_list.append(imp_sam['ll_list'])
-est = cpf.lengthscale_inference(x_list, g_list, w_list, np.linspace(0.00001,0.1,25), current_model_params)
+w_temp = np.ones(n_imp_samples*t_batch_size)
+est = cpf.lengthscale_inference(x_list, g_list, w_temp, np.linspace(0.00001,0.1,20), current_model_params)
 true = true_model_params['lengthscale']
 start = current_model_params['lengthscale']
 
 
+def plot_index(n):
+      real_label = real_labels[n//n_imp_samples]
+      pred_label = pred_labels[n//n_imp_samples]
+      x = x_list[n]
+      g = g_list[n]
+      w = w_list[n]
+      ll = ll_list[n]
+      q = q_list[n]
+      fig = plt.figure()
+      mut_index = np.where(np.array(real_seqs[n//n_imp_samples] != np.array(germline)))
+      temp = {'real':real_label,'pred':pred_label,"x":x,'g':g,'w':w,'ll':ll,'q':q}
+      # First plot, comparing pred g to true
+      ax1 = fig.add_subplot(111)
+      min_value = np.min(np.concatenate((temp['real'][:,0][temp['real'][:,0]!=0],temp['pred'][:,0][c_array==1],g_list[n])))
+      max_value = np.max(np.concatenate((temp['real'][:,0][temp['real'][:,0]!=0],temp['pred'][:,0][c_array==1],g_list[n])))
+      
+      ax1.scatter(np.linspace(0,1,308)[temp['real'][:,0]!=0],temp['real'][:,0][temp['real'][:,0]!=0], s=10, c='b', marker="s", label='real g')
+      ax1.scatter(np.linspace(0,1,308)[c_array==1],temp['pred'][:,0][c_array==1], s=10, c='r', marker="o", label='pred_g')
+      ax1.scatter(x_list[n],g_list[n], s=10, c='m', marker="o", label='is g')
+      ax1.vlines(np.linspace(0,1,308)[mut_index], ymin = min_value, ymax = max_value, colors = 'k')
+      plt.legend(loc='best');
+      return ax1
+
+gp_kern_ridged = cpf.make_se_kernel(
+              np.linspace(0,1,308), current_model_params['lengthscale'], current_model_params['gp_sigma'], current_model_params['gp_ridge']
+          )
+temp = []
+for i in range(t_batch_size):      
+          # P(G_k^i) in weights equation
+      gp = np.log(
+      scipy.stats.multivariate_normal.pdf(
+            real_full_g[i], mean=current_model_params['gp_offset'] + np.zeros(308), cov=gp_kern_ridged)
+        )
+      temp.append(gp)
+              

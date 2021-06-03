@@ -27,11 +27,28 @@ def make_se_kernel(x, lengthscale, sigma, gp_ridge):
 #' @param gp_offset The mean of the GP
 #' Returns A dict with A = lesions, A_tilde = prelesions, g =
 #' values of the GP on [A, A_tilde], in that order.
-def forward_sample_sgcp(lambda_star, lengthscale, gp_sigma, gp_ridge, gp_offset):
+def forward_sample_sgcp(lambda_star, lengthscale, gp_sigma, gp_ridge, gp_offset, full_g):
     N = np.random.poisson(lam=lambda_star)
     x = np.random.uniform(low=0, high=1, size=N)
-    K = make_se_kernel(x, lengthscale, gp_sigma, gp_ridge)
-    lambda_of_x = np.random.multivariate_normal(mean=gp_offset + np.zeros(N), cov=K)
+    # If full g, sample linearly spaced points from [0,1], otherwise use x
+    if full_g:
+          full_x = np.linspace(0.0,1.0,308)
+          K = make_se_kernel(full_x, lengthscale, gp_sigma, gp_ridge)
+          lambda_of_x = np.random.multivariate_normal(mean=gp_offset + np.zeros(len(full_x)), cov=K)
+          
+    else:
+          K = make_se_kernel(x, lengthscale, gp_sigma, gp_ridge)
+          lambda_of_x = np.random.multivariate_normal(mean=gp_offset + np.zeros(len(x)), cov=K)
+          
+    
+    if full_g:
+          l_temp = []
+          for i in x:
+                l_temp.append(lambda_of_x[np.argmin(abs(i-full_x))])
+          full_lambda = lambda_of_x
+          lambda_of_x = np.array(l_temp)
+    else:
+          full_lambda = []
     sigma_lambda_of_x = 1 / (1 + np.exp(-lambda_of_x))
     uniforms = np.random.uniform(low=0, high=1, size=len(x))
     A_and_g = [
@@ -48,7 +65,7 @@ def forward_sample_sgcp(lambda_star, lengthscale, gp_sigma, gp_ridge, gp_offset)
     A_tilde = [at for (at, g) in A_tilde_and_g]
     g = [g for (a, g) in A_and_g + A_tilde_and_g]
     # Return esions, prelesions, gp (unit interval)
-    return A, A_tilde, g
+    return A, A_tilde, g, full_lambda
 
 
 #' Sample one position from BER distribution
@@ -78,13 +95,13 @@ def discrete_to_interval(i, seq_length):
 #' @param gp_offset The mean of the GP
 #' Returns mutated sequence, Lesions (only at C sites), Prelesions (only at C sites), gp values for these lesions and prelesions
 def forward_sample_sequences(
-    c_array, lambda_star, lengthscale, gp_sigma, gl_seq, ber_params, gp_ridge, gp_offset
+    c_array, lambda_star, lengthscale, gp_sigma, gl_seq, ber_params, gp_ridge, gp_offset, full_g = False
 ):
     # DEEP copy gl seq to edit
     output_seq = gl_seq[:]
     # AID lesions, continuous
-    A, A_tilde, g = forward_sample_sgcp(
-        lambda_star, lengthscale, gp_sigma, gp_ridge, gp_offset
+    A, A_tilde, g, full_lambda = forward_sample_sgcp(
+        lambda_star, lengthscale, gp_sigma, gp_ridge, gp_offset, full_g
     )
     A_long = np.zeros(len(gl_seq))
     A_tilde_long = np.zeros(len(gl_seq))
@@ -101,7 +118,7 @@ def forward_sample_sequences(
             A_tilde_long[i] += 1
             g_long[i] = g[j + len(A)]
 
-    return output_seq, A_long, A_tilde_long, g_long
+    return output_seq, A_long, A_tilde_long, g_long, full_lambda
 
 
 #' @param g: The values of the GP, the first K corresponding to lesions, last M corresponding to prelesions

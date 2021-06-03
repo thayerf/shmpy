@@ -20,11 +20,12 @@ def hot_encode_2d(seq):
 #' @param ber_params: Transition probabilities for BER
 #' @batch_size: Number of sequences to sample
 #' Returns hot encoded mutated sequence and latent state labels
-def gen_nn_batch(germline, c_array, params, ber_params, batch_size):
+def gen_nn_batch(germline, c_array, params, ber_params, batch_size, full_g_flag = False):
     mut = []
     lat = []
+    fulls =[]
     for i in range(batch_size):
-        seq, A_long, A_tilde_long, g_long = cpf.forward_sample_sequences(
+        seq, A_long, A_tilde_long, g_long, full_lambda = cpf.forward_sample_sequences(
             c_array,
             params["base_rate"],
             params["lengthscale"],
@@ -33,10 +34,12 @@ def gen_nn_batch(germline, c_array, params, ber_params, batch_size):
             ber_params,
             params["gp_ridge"],
             params["gp_offset"],
+            full_g = full_g_flag
         )
         mut.append(hot_encode_2d(seq))
         lat.append(np.stack([g_long, A_long, A_tilde_long], axis=1))
-    return np.array(mut), np.array(lat)
+        fulls.append(full_lambda)
+    return np.array(mut), np.array(lat), fulls
 
 
 # Generate batch of mutated seqs in nn friendly format and keep char vec of seqs
@@ -46,12 +49,13 @@ def gen_nn_batch(germline, c_array, params, ber_params, batch_size):
 #' @param ber_params: Transition probabilities for BER
 #' @batch_size: Number of sequences to sample
 #' Returns hot encoded mutated sequence and latent state labels, as well as seq char vecs
-def gen_batch_with_seqs(germline, c_array, params, ber_params, batch_size):
+def gen_batch_with_seqs(germline, c_array, params, ber_params, batch_size,full_g_flag = False):
     mut = []
     lat = []
     seqs = []
+    fulls = []
     for i in range(batch_size):
-        seq, A_long, A_tilde_long, g_long = cpf.forward_sample_sequences(
+        seq, A_long, A_tilde_long, g_long, full_lambda = cpf.forward_sample_sequences(
             c_array,
             params["base_rate"],
             params["lengthscale"],
@@ -60,8 +64,10 @@ def gen_batch_with_seqs(germline, c_array, params, ber_params, batch_size):
             ber_params,
             params["gp_ridge"],
             params["gp_offset"],
+            full_g_flag
         )
         mut.append(hot_encode_2d(seq))
         lat.append(np.stack([g_long, A_long, A_tilde_long], axis=1))
         seqs.append(seq)
-    return np.array(mut), np.array(lat), seqs
+        fulls.append(full_lambda)
+    return np.array(mut), np.array(lat), seqs, fulls
