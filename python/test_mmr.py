@@ -173,11 +173,3 @@ f = open('true_sig', 'a')
 f.write(str(true_sig) + ' ')
 f.close()
 
-
-f = open('true_re', 'a')
-f.write(str(true_re) + ' ')
-f.close()
-
-f = open('est_re', 'a')
-f.write(str(pred_mean_re) + ' ')
-f.close()
