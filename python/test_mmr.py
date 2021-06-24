@@ -11,6 +11,7 @@ import sys
 import json
 import random
 import matplotlib.pyplot as plt
+import math
 random.seed(1408)
 # Load options
 
@@ -137,11 +138,16 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
         sample_mmr_stat = get_mmr_summ(sample, germline)
         colocal = np.append(sample_colocals[0:50:5], np.mean(sample_bp))
         colocal = np.append(colocal, sample_mmr_stat)
-        w_list.append(gauss_kernel(colocal, base_colocal,eps))
+        print(colocal)
+        w = gauss_kernel(colocal,base_colocal,eps)
+        print(w)
+        if math.isnan(w):
+            w = 0.0
+        w_list.append(w)
         ls_list.append(model_params['lengthscale'])
         sg_list.append(model_params['gp_sigma'])
         rate_list.append(model_params['base_rate'])
-        p_fw_list.apppend(model_params['p_fw'])
+        p_fw_list.append(model_params['p_fw'])
         if i % 50 == 0:
             print(i)
     return rate_list, ls_list, sg_list, p_fw_list,  w_list, base_colocal
@@ -149,9 +155,8 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
 true_model_params = sample_prior()
 obs_sample = gen_batch_letters(germline, 1000, true_model_params)
 
-rate_list, ls_list, sg_list, p_fw_list,  w_list, base_colocal = importance_sample(obs_sample,germline, 1000, 500, 2.0)
-
-
+rate_list, ls_list, sg_list, p_fw_list,  w_list, base_colocal = importance_sample(obs_sample,germline, 1000, 1000, 2.0)
+print(w_list)
 
 pred_mean_ls = np.dot(w_list,ls_list)/np.sum(w_list)
 pred_mean_sig = np.dot(w_list, sg_list)/np.sum(w_list)
