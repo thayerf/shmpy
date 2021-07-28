@@ -12,6 +12,7 @@ import json
 import random
 import matplotlib.pyplot as plt
 import math
+import scipy.interpolate
 random.seed(1408)
 # Load options
 
@@ -58,7 +59,7 @@ def gen_batch_letters(seq,batch_size, params):
         "C": [0.01, 0.01, 0.97, 0.01],
         "T": [0.06, 0.02, 0.02, 0.9],
     }
-    prior_params = sample_prior()
+    prior_params = params
     mutated_seq_list = []
     for i in range(batch_size):
           mr = MutationRound(
@@ -138,9 +139,7 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
         sample_mmr_stat = get_mmr_summ(sample, germline)
         colocal = np.append(sample_colocals[0:50:5], np.mean(sample_bp))
         colocal = np.append(colocal, sample_mmr_stat)
-        print(colocal)
         w = gauss_kernel(colocal,base_colocal,eps)
-        print(w)
         if math.isnan(w):
             w = 0.0
         w_list.append(w)
@@ -166,7 +165,6 @@ true_ls = true_model_params['lengthscale']
 true_sig = true_model_params['gp_sigma']
 true_rate = true_model_params['base_rate']
 true_p_fw = true_model_params['p_fw']
-
 
 f = open("est_ls", "a")
 f.write(str(pred_mean_ls) + " ")
