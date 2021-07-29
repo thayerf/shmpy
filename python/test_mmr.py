@@ -12,7 +12,6 @@ import json
 import random
 import matplotlib.pyplot as plt
 import math
-import scipy.interpolate
 random.seed(1408)
 # Load options
 
