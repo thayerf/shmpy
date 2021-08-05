@@ -36,7 +36,7 @@ def sample_prior():
     off = -10
     p_fw = np.random.uniform(low = 0.0,high = 1.0)
     return { "base_rate" : br,
-                       "lengthscale" : np.exp(ls),
+                       "lengthscale" : ls,
                        "gp_sigma" : sg,
                        "gp_ridge" : .01,
             "gp_offset": off,
@@ -156,11 +156,11 @@ obs_sample = gen_batch_letters(germline, 1000, true_model_params)
 rate_list, ls_list, sg_list, p_fw_list,  w_list, base_colocal = importance_sample(obs_sample,germline, 1000, 1000, 2.0)
 print(w_list)
 
-pred_mean_ls = np.dot(w_list,np.log(ls_list))/np.sum(w_list)
+pred_mean_ls = np.dot(w_list,ls_list)/np.sum(w_list)
 pred_mean_sig = np.dot(w_list, sg_list)/np.sum(w_list)
 pred_mean_rate = np.dot(w_list, rate_list)/np.sum(w_list)
 pred_mean_p_fw = np.dot(w_list, p_fw_list)/np.sum(w_list)
-true_ls =np.log(true_model_params['lengthscale'])
+true_ls = true_model_params['lengthscale']
 true_sig = true_model_params['gp_sigma']
 true_rate = true_model_params['base_rate']
 true_p_fw = true_model_params['p_fw']
