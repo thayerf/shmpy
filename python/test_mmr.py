@@ -36,13 +36,13 @@ def sample_prior():
     off = -10
     p_fw = np.random.uniform(low = 0.0,high = 1.0)
     ber_lambda = np.random.uniform(low = 0.0, high = 1.0)
-    return { "base_rate" : br,
-                       "lengthscale" : ls,
-                       "gp_sigma" : sg,
+    return { "base_rate" : 0.15,
+                       "lengthscale" : -7,
+                       "gp_sigma" : 10,
                        "gp_ridge" : .01,
             "gp_offset": off,
             "p_fw": p_fw,
-            "ber_prob": ber_lambda
+            "ber_prob": 0.5
             }
 
 # Get batch
