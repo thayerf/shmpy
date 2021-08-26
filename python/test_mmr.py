@@ -36,13 +36,13 @@ def sample_prior():
     off = -10
     p_fw = np.random.uniform(low = 0.0,high = 1.0)
     ber_lambda = np.random.uniform(low = 0.0, high = 1.0)
-    return { "base_rate" : 0.15,
-                       "lengthscale" : -7,
-                       "gp_sigma" : 10,
+    return { "base_rate" : br,
+                       "lengthscale" : ls,
+                       "gp_sigma" : sg,
                        "gp_ridge" : .01,
             "gp_offset": off,
             "p_fw": p_fw,
-            "ber_prob": 0.5
+            "ber_prob": ber_lambda
             }
 
 # Get batch
@@ -124,7 +124,6 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
     colocals = get_colocal(obs_sequences, germline,true_bp, 50)
     base_colocal = np.append(colocals[0:50:5], np.mean(true_bp))
     base_colocal = np.append(base_colocal, mmr_stat)
-    base_colocal = mmr_stat
     ls_list = []
     w_list = []
     sg_list = []
@@ -142,7 +141,6 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
         sample_mmr_stat = get_mmr_summ(sample, germline)
         colocal = np.append(sample_colocals[0:50:5], np.mean(sample_bp))
         colocal = np.append(colocal, sample_mmr_stat)
-        colocal = sample_mmr_stat
         w = gauss_kernel(colocal,base_colocal,eps)
         if math.isnan(w):
             w = 0.0
@@ -159,7 +157,7 @@ def importance_sample(obs_sequences,germline,n_imp_samp, n, eps):
 true_model_params = sample_prior()
 obs_sample = gen_batch_letters(germline, 1000, true_model_params)
 
-rate_list, ls_list, sg_list, p_fw_list, ber_p_list,  w_list, base_colocal = importance_sample(obs_sample,germline, 1000, 1000, 1.0)
+rate_list, ls_list, sg_list, p_fw_list, ber_p_list,  w_list, base_colocal = importance_sample(obs_sample,germline, 3000, 1000, 0.5)
 print(w_list)
 
 pred_mean_ls = np.dot(w_list,ls_list)/np.sum(w_list)
