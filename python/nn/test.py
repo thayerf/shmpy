@@ -1,7 +1,7 @@
 # Load our stuff
 import keras
-from keras.models import Sequential
-from keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 from Bio import SeqIO
@@ -17,8 +17,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 random.seed(1408)
 import csv
-from scipy.stats import ttest_1samp
-import pandas as pd
 import collections
 # Load options
 
@@ -45,18 +43,18 @@ for i in range(308):
     
 def sample_prior():
     ls = np.random.uniform(low = -12.0, high = -2.0)
-    sg = np.random.uniform(low = 5.0, high = 20.0)
+    sg = np.random.uniform(low = 5.0, high = 15.0)
     off = -10
     p_fw = np.random.uniform(low =0.0, high = 1.0)
-    exo_left = np.random.uniform(low =0.0, high = 1.0)
-    exo_right = np.random.uniform(low =0.0, high = 1.0)
+    exo_left = np.random.uniform(low =0.5, high = 0.5)
+    exo_right = np.random.uniform(low =0.5, high = 0.5)
     ber_prob = np.random.uniform(low = 0.0, high = 1.0)
     thinning_prob = norm.cdf(10.0/sg)
     fw_br = np.minimum(fw_contexts/(1.0-thinning_prob),1.0)
     rc_br = np.minimum(rc_contexts/(1.0-thinning_prob),1.0)
     return {           "lengthscale" : ls,
                        "gp_sigma" : sg,
-                       "gp_ridge" : .01,
+                       "gp_ridge" : .03,
             "gp_offset": off,
             "p_fw": p_fw,
             "fw_br": fw_br,
@@ -267,7 +265,13 @@ print(model.summary(90))
 
 history = model.fit_generator(
     genTraining(10, 1000),
-    epochs=10,
+    epochs=75,
     steps_per_epoch=1,
     callbacks=[hist],
 )
+
+test_data, test_labels = gen_batch(100,1000)
+
+pred_labels = model.predict(np.array(test_data))
+np.save('labels',np.array(test_labels))
+np.save('preds', np.array(pred_labels))
