@@ -54,7 +54,7 @@ def sample_prior():
     rc_br = np.minimum(rc_contexts/(1.0-thinning_prob),1.0)
     return {           "lengthscale" : ls,
                        "gp_sigma" : sg,
-                       "gp_ridge" : .03,
+                       "gp_ridge" : .04,
             "gp_offset": off,
             "p_fw": p_fw,
             "fw_br": fw_br,
@@ -253,7 +253,7 @@ hist = keras.callbacks.History()
 # Give summary of architecture
 
 # Initialize optimizer with given step size
-adam = Adam(lr=.0004, decay=.0004 / 10000)
+adam = Adam(lr=.02)
 # Compile model w/ pinball loss, use mse as metric
 model.compile(
     loss=['mse'],
@@ -264,8 +264,8 @@ print(model.summary(90))
 # Train the model using generator and callbacks we defined w/ test set as validation
 
 history = model.fit_generator(
-    genTraining(10, 1000),
-    epochs=75,
+    genTraining(50, 1000),
+    epochs=200,
     steps_per_epoch=1,
     callbacks=[hist],
 )
