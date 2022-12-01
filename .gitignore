@@ -5,6 +5,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*edge_df
+*.csv
+*.tab
+*.pk1
+*.json
 # C extensions
 *.so
 
