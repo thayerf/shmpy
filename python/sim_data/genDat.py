@@ -22,9 +22,9 @@ from random import sample
 from sumstats import *
 from params import *
 # Load df with all seqs
-df = pd.read_pickle("full_edge_df.pk1")
-parent_sequences = df['PARENT_SEQ']
-
+df = pd.read_pickle("./data/full_edge_df.pk1")
+parent_sequences = df['orig_seq']
+run = sys.argv[0]
 cm = ContextModel(3, 2, pkgutil.get_data("SHMModels", "data/aid_goodman.csv"))
 
 # Get batch (BER AND POL ETA DEFINED HERE)
@@ -41,8 +41,8 @@ def gen_batch_letters(seq,batch_size, params):
         "T": [0.06, 0.02, 0.02, 0.9],
     }
     prior_params = params
-    exo_left = prior_params['exo_left']
-    exo_right = prior_params['exo_right']
+    exo_left = 1.0/prior_params['exo_left']
+    exo_right = 1.0/prior_params['exo_right']
     mutated_seq_list = []
     for i in range(batch_size):
           mr = MutationRound(
@@ -104,18 +104,6 @@ train_X, train_theta = gen_batch(train_batch_size, num_seqs,parent_sequences)
 if np.isnan(test_X).any() or np.isnan(train_X).any():
     pass
 else:
-    f=open('test_X','a+')
-    np.savetxt(f, test_X, delimiter=',')
-    f.close()
-
-    f=open('test_theta','a+')
-    np.savetxt(f, test_theta, delimiter=',') 
-    f.close()
-
-    f=open('train_X','a+')
-    np.savetxt(f, train_X, delimiter=',') 
-    f.close()
-
-    f=open('train_theta','a+')
-    np.savetxt(f, train_theta, delimiter=',')
-    f.close()
+    data = pd.DataFrame(np.concatenate((test_X,test_theta,np.ones((test_batch_size,1))),axis = 1))
+    data = data.append(pd.DataFrame(np.concatenate((train_X,train_theta,np.zeros((train_batch_size,1))),axis = 1)))
+    data.to_csv('data.csv', mode='a', index=False, header=False)
