@@ -1,4 +1,5 @@
 # shmpy
+Fitting mechanistic parameters requires installing the mechanistic forward simulator: https://github.com/thayerf/SHMModels
 
 Simulating and fitting the Neural Network ABC estimator consists of 3 steps:
 
