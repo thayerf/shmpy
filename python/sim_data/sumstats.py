@@ -20,7 +20,7 @@ def get_diff_loc(s1, s2):
 
 def get_pairwise_dists(locs, length):
     """Given sequence pair difference locations and sequence total length, 
-    calculates the pairwise distances between all of the differences"""
+    calculates the pairwise distances between all of the differences and divides by total number of pairs at that distance"""
     arr = np.zeros(length - 1)
     for i in range(len(locs)):
         for j in range(len(locs) - i - 1):
