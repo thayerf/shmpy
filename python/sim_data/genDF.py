@@ -17,7 +17,6 @@ import collections
 # Load options
 import pandas as pd
 import glob
-from Bio.Alphabet.IUPAC import unambiguous_dna, ambiguous_dna
 from random import sample
 # Get df with all seqs
 df = pd.read_csv('../data/shmoof_edges_11-Jan-2023_NoNode0_iqtree_K80+R.csv')

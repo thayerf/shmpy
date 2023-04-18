@@ -17,7 +17,6 @@ from scipy.stats import norm
 # Load options
 import pandas as pd
 import glob
-from Bio.Alphabet.IUPAC import unambiguous_dna, ambiguous_dna
 from random import sample
 from sumstats import *
 from params import *
@@ -81,7 +80,7 @@ def gen_batch(batch_size, num_seqs, parent_sequences):
         obs_sample = []
         parent_sample = sample(list(parent_sequences),num_seqs)
         for i in range(num_seqs):
-            t_seq = gen_batch_letters(Seq(parent_sample[i], unambiguous_dna),1, true_model_params)
+            t_seq = gen_batch_letters(Seq(parent_sample[i]),1, true_model_params)
             obs_sample.append(t_seq[0])
         colocals = colocal_vector(parent_sample, obs_sample)
         exo = np.concatenate([get_exo_summ(obs_sample[i],parent_sample[i]) for i in range(len(parent_sample))]).ravel().tolist()
