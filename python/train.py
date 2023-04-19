@@ -25,7 +25,7 @@ import csv
 lr = 10e-6
 # Load test and train data
 data = []
-with open("./sim_data/data/data.csv") as csvfile:
+with open("./sim_data/data.csv") as csvfile:
     reader = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC) # change contents to floats
     for row in reader: # each row is a list
         data.append(row)
