@@ -66,14 +66,20 @@ model = tf.keras.Sequential()
 model.add(tf.keras.layers.Dense(128, input_dim= 105, activation='relu'))
 model.add(tf.keras.layers.Dense(64, activation='relu'))
 model.add(tf.keras.layers.Dense(32, activation='relu'))
-model.add(tf.keras.layers.Dense(6, activation='linear'))
+model.add(tf.keras.layers.Dense(12, activation='linear'))
 # Give summary of architecture
-
+def meanAndVariance(y_true,y_pred) :
+  """Loss function that has the values of the last axis in y_true 
+  approximate the mean and variance of each value in the last axis of y_pred."""
+  mean = y_pred[..., 0::2]
+  variance = y_pred[..., 1::2]
+  res = tf.math.square(mean - y_true) + tf.math.square(variance - tf.math.square(mean - y_true))
+  return tf.math.reduce_mean(res, axis=-1)
 # Initialize optimizer with given step size
 adam = tf.keras.optimizers.Adam(learning_rate = lr)
 # Compile model w/ pinball loss, use mse as metric
 model.compile(
-    loss=['mse'],
+    loss=[meanAndVariance],
     optimizer=adam,
 )
 
@@ -90,6 +96,6 @@ history = model.fit(
 )
 
 pred_labels = (model.predict(test_X)*std) + mean
-np.save('preds/labels_0',np.array(test_theta))
-np.save('preds/preds_0', np.array(pred_labels))
-model.save("preds/model")
+np.save('preds/labels_10',np.array(test_theta))
+np.save('preds/preds_10', np.array(pred_labels))
+model.save("preds/model10")
