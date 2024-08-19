@@ -192,3 +192,12 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+python/logs/*
+*.npy
+*.pb
+*.index
+python/preds/*
+*.png
+*.pdf
+*.svg
+python/branch_lengths
